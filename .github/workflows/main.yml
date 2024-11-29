@@ -62,7 +62,7 @@ jobs:
           cd /home/ubuntu/ftt_backend/
           chmod +x ./gradlew
           echo "Building backend application with React directory path..."
-          ./gradlew clean build -x test -PreactDirPath=/home/ubuntu/ftt_frontend --info
+          ./gradlew clean build -PreactDirPath=/home/ubuntu/ftt_frontend
           echo "Stopping existing application..."
           pkill -f 'java -jar' || true
           echo "Starting new application..."
