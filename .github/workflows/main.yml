@@ -14,17 +14,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. 코드 체크아웃
-    - name: Checkout Code
+    # 1. Backend 코드 체크아웃
+    - name: Checkout Backend Code
       uses: actions/checkout@v3
 
-    # 2. React 프로젝트와 백엔드 동기화
-    - name: Sync Files to EC2
+    # 2. Frontend 코드 클론
+    - name: Clone Frontend Repository
+      run: |
+        git clone https://github.com/SungWookkk/FTT_frontend.git ftt_frontend
+
+    # 3. Frontend 빌드
+    - name: Build Frontend
+      run: |
+        cd ftt_frontend
+        npm install
+        npm run build
+
+    # 4. Frontend 빌드 파일을 Backend에 복사
+    - name: Copy Frontend Build to Backend
+      run: |
+        cp -r ftt_frontend/build/* src/main/resources/static/
+
+    # 5. Backend 코드를 EC2 서버로 동기화
+    - name: Sync Backend to EC2
       run: |
         mkdir -p ~/.ssh
         echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
-
         rsync -avz --progress \
           --exclude '.git/' \
           --exclude '.github/' \
@@ -34,11 +50,7 @@ jobs:
           -e "ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa" \
           ./ ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/ftt_backend/
 
-        rsync -avz --progress \
-          -e "ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa" \
-          ./ftt_frontend/ ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/ftt_frontend/
-
-    # 3. 빌드 및 애플리케이션 재시작
+    # 6. EC2 서버에서 빌드 및 애플리케이션 실행
     - name: Build and Restart Application
       uses: appleboy/ssh-action@v0.1.8
       with:
@@ -46,21 +58,16 @@ jobs:
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
-          # React 빌드
-          cd /home/ubuntu/ftt_frontend
-          npm install
-          npm run build
-
-          # React 빌드 결과물 복사
-          cp -r build/* /home/ubuntu/ftt_backend/src/main/resources/static/
-
-          # Gradle 빌드
-          cd /home/ubuntu/ftt_backend
+          # Backend 디렉토리 이동
+          cd /home/ubuntu/ftt_backend/
+          # Gradle Wrapper 실행 권한 추가
           chmod +x ./gradlew
-          ./gradlew clean build -x test
-
+          # Backend 빌드
+          echo "Building backend application..."
+          ./gradlew bootRun
           # 기존 애플리케이션 중지
+          echo "Stopping existing application..."
           pkill -f 'java -jar' || true
-
           # 새로운 애플리케이션 실행
+          echo "Starting new application..."
           nohup java -jar build/libs/*.jar > /dev/null 2>&1 &
