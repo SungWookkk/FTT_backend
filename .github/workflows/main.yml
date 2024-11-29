@@ -18,7 +18,7 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v3
 
-    # 2. Sync Changed Files to EC2
+    # 2. 변경된 파일만 EC2 서버로 동기화
     - name: Sync Changed Files to EC2
       run: |
         mkdir -p ~/.ssh
@@ -34,7 +34,7 @@ jobs:
           -e "ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa" \
           ./ ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/ftt_backend/
 
-    # 3. Build and Restart Application
+    # 3. 빌드 및 애플리케이션 재시작
     - name: Build and Restart Application
       uses: appleboy/ssh-action@v0.1.8
       with:
