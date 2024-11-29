@@ -42,15 +42,14 @@ jobs:
         mkdir -p ~/.ssh
         echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
-        rsync -az --progress \
-          --delete \
+        rsync -az --delete \
           --exclude '.git/' \
           --exclude '.github/' \
           --exclude 'README.md' \
           --exclude '*.md' \
           --exclude '.idea/' \
           -e "ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa" \
-          ./ ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/ftt_backend/
+          ./ ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/ftt_backend/ > /dev/null
 
     # 6. EC2 서버에서 빌드 및 애플리케이션 실행
     - name: Build and Restart Application
