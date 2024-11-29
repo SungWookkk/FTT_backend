@@ -21,8 +21,8 @@ jobs:
     # 2. Frontend 코드 클론
     - name: Clone Frontend Repository
       run: |
-        git clone https://github.com/SungWookkk/FTT_frontend.git ftt_frontend
-
+        git clone https://x-access-token:${{ secrets.FRONTEND_REPO_TOKEN }}@github.com/SungWookkk/FTT_frontend.git ftt_frontend
+        
     # 3. Frontend 빌드
     - name: Build Frontend
       run: |
