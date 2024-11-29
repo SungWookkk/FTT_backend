@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. 체크 아웃
+    # 1. 체크 아웃1
     - name: Checkout Code
       uses: actions/checkout@v3
 
