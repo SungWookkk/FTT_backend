@@ -47,7 +47,7 @@ jobs:
 
           # Gradle build
           echo "Building backend application..."
-          ./gradlew clean build -x test
+          ./gradlew bootRun
 
           # Stop existing application
           echo "Stopping existing application..."
