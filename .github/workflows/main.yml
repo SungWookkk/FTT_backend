@@ -14,12 +14,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. 체크 아웃1
+    # 1. 코드 체크아웃
     - name: Checkout Code
       uses: actions/checkout@v3
 
-    # 2. 변경된 파일만 EC2 서버로 동기화
-    - name: Sync Changed Files to EC2
+    # 2. React 프로젝트와 백엔드 동기화
+    - name: Sync Files to EC2
       run: |
         mkdir -p ~/.ssh
         echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
@@ -34,6 +34,10 @@ jobs:
           -e "ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa" \
           ./ ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/ftt_backend/
 
+        rsync -avz --progress \
+          -e "ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa" \
+          ./ftt_frontend/ ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/ftt_frontend/
+
     # 3. 빌드 및 애플리케이션 재시작
     - name: Build and Restart Application
       uses: appleboy/ssh-action@v0.1.8
@@ -42,20 +46,21 @@ jobs:
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
-          # Move to backend directory
-          cd /home/ubuntu/ftt_backend/
+          # React 빌드
+          cd /home/ubuntu/ftt_frontend
+          npm install
+          npm run build
 
-          # Gradle Wrapper에 실행 권한 추가
-          chmod +x ./gradlew
-        
+          # React 빌드 결과물 복사
+          cp -r build/* /home/ubuntu/ftt_backend/src/main/resources/static/
+
           # Gradle 빌드
-          echo "Building backend application..."
+          cd /home/ubuntu/ftt_backend
+          chmod +x ./gradlew
           ./gradlew clean build -x test
-        
+
           # 기존 애플리케이션 중지
-          echo "Stopping existing application..."
           pkill -f 'java -jar' || true
-        
+
           # 새로운 애플리케이션 실행
-          echo "Starting new application..."
           nohup java -jar build/libs/*.jar > /dev/null 2>&1 &
