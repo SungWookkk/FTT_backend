@@ -22,7 +22,7 @@ jobs:
     - name: Clone Frontend Repository
       run: |
         git clone https://x-access-token:${{ secrets.FRONTEND_REPO_TOKEN }}@github.com/SungWookkk/FTT_frontend.git ftt_frontend
-        
+
     # 3. Frontend 빌드
     - name: Build Frontend
       run: |
@@ -33,6 +33,7 @@ jobs:
     # 4. Frontend 빌드 파일을 Backend에 복사
     - name: Copy Frontend Build to Backend
       run: |
+        mkdir -p src/main/resources/static # static 디렉터리가 없으면 생성
         cp -r ftt_frontend/build/* src/main/resources/static/
 
     # 5. Backend 코드를 EC2 서버로 동기화
