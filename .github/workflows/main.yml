@@ -20,19 +20,15 @@ jobs:
 
     # 2. 변경된 파일만 EC2 서버로 동기화
     - name: Sync Changed Files to EC2
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USER }}
-        key: ${{ secrets.EC2_SSH_KEY }}
-        source: "*"
-        target: "/home/ubuntu/ftt_backend/"
-        exclude: |
-          .git/**
-          .github/**
-          README.md
-          *.md
-          .idea/**
+      run: |
+        rsync -avz --progress \
+          --exclude '.git/' \
+          --exclude '.github/' \
+          --exclude 'README.md' \
+          --exclude '*.md' \
+          --exclude '.idea/' \
+          -e "ssh -i ${{ secrets.EC2_SSH_KEY }}" \
+          ./ ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/ftt_backend/
 
     # 3. 서버에서 빌드 및 애플리케이션 재시작
     - name: Build and Restart Application
