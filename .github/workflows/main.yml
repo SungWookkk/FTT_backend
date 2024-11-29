@@ -42,7 +42,8 @@ jobs:
         mkdir -p ~/.ssh
         echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
-        rsync -avz --progress \
+        rsync -az --progress \
+          --delete \
           --exclude '.git/' \
           --exclude '.github/' \
           --exclude 'README.md' \
@@ -65,7 +66,7 @@ jobs:
           chmod +x ./gradlew
           # Backend 빌드
           echo "Building backend application..."
-          ./gradlew clean build -x test
+          ./gradlew bootRun
           # 기존 애플리케이션 중지
           echo "Stopping existing application..."
           pkill -f 'java -jar' || true
