@@ -33,7 +33,7 @@ jobs:
     # 4. Frontend 빌드 파일을 Backend에 복사
     - name: Copy Frontend Build to Backend
       run: |
-        mkdir -p src/main/resources/static # static 디렉터리가 없으면 생성
+        mkdir -p src/main/resources/static
         cp -r ftt_frontend/build/* src/main/resources/static/
 
     # 5. Backend 코드를 EC2 서버로 동기화
@@ -42,7 +42,7 @@ jobs:
         mkdir -p ~/.ssh
         echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
-        rsync -avz --progress \
+        rsync -aq --stats --human-readable \
           --exclude '.git/' \
           --exclude '.github/' \
           --exclude 'README.md' \
@@ -59,16 +59,11 @@ jobs:
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
-          # Backend 디렉토리 이동
           cd /home/ubuntu/ftt_backend/
-          # Gradle Wrapper 실행 권한 추가
           chmod +x ./gradlew
-          # Backend 빌드
           echo "Building backend application..."
-          ./gradlew clean bootRun -PreactDirPath=/home/ubuntu/ftt_frontend
-          # 기존 애플리케이션 중지
+          ./gradlew clean build -x test
           echo "Stopping existing application..."
           pkill -f 'java -jar' || true
-          # 새로운 애플리케이션 실행
           echo "Starting new application..."
           nohup java -jar build/libs/*.jar > /dev/null 2>&1 &
