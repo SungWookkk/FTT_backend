@@ -21,14 +21,18 @@ jobs:
     # 2. Sync Changed Files to EC2
     - name: Sync Changed Files to EC2
       run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+
         rsync -avz --progress \
           --exclude '.git/' \
           --exclude '.github/' \
           --exclude 'README.md' \
           --exclude '*.md' \
           --exclude '.idea/' \
-          -e "ssh -o StrictHostKeyChecking=no -i ${{ secrets.EC2_SSH_KEY }}" \
-          ./ ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/ftt_backend/
+          -e "ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa" \
+          ./ ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/ftt_backend/
 
     # 3. Build and Restart Application
     - name: Build and Restart Application
