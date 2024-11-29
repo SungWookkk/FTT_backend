@@ -22,7 +22,7 @@ jobs:
     - name: Clone Frontend Repository
       run: |
         git clone https://x-access-token:${{ secrets.FRONTEND_REPO_TOKEN }}@github.com/SungWookkk/FTT_frontend.git ftt_frontend
-        
+
     # 3. Frontend 빌드
     - name: Build Frontend
       run: |
@@ -30,9 +30,10 @@ jobs:
         npm install
         npm run build
 
-    # 4. Frontend 빌드 파일을 Backend에 복사
+    # 4. Backend 정적 파일 디렉토리 생성 및 Frontend 빌드 파일 복사
     - name: Copy Frontend Build to Backend
       run: |
+        mkdir -p src/main/resources/static
         cp -r ftt_frontend/build/* src/main/resources/static/
 
     # 5. Backend 코드를 EC2 서버로 동기화
@@ -64,7 +65,7 @@ jobs:
           chmod +x ./gradlew
           # Backend 빌드
           echo "Building backend application..."
-          ./gradlew bootRun
+          ./gradlew clean build -x test
           # 기존 애플리케이션 중지
           echo "Stopping existing application..."
           pkill -f 'java -jar' || true
