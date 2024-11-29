@@ -51,7 +51,7 @@ jobs:
           -e "ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa" \
           ./ ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/ftt_backend/
 
-    # 6. EC2 서버에서 빌드 및 애플리케이션 실행
+    # 6. EC2 서버에서 빌드 및 애플리케이션 실행1
     - name: Build and Restart Application
       uses: appleboy/ssh-action@v0.1.8
       with:
