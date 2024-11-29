@@ -10,6 +10,6 @@ public class FttBackendApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(FttBackendApplication.class, args);
+		System.out.println("테스트입니다");
 	}
-
 }
