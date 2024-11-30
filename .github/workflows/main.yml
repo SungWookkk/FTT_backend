@@ -59,11 +59,9 @@ jobs:
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
-          cd /home/ubuntu/ftt_backend/
+          cd /home/ubuntu/cd/backend/
           chmod +x ./gradlew
-          echo "Building backend application with React directory path..."
           ./gradlew clean build -PreactDirPath=/home/ubuntu/ftt_frontend
-          echo "Stopping existing application..."
           pkill -f 'java -jar' || true
-          echo "Starting new application..."
           nohup java -jar build/libs/*.jar > /dev/null 2>&1 &
+
