@@ -51,7 +51,7 @@ jobs:
           -e "ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa" \
           ./ ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/ftt_backend/
 
-    # 6. EC2 서버에서 빌드 및 애플리케이션 실행1
+    # 6. EC2 서버에서 빌드 및 애플리케이션 실행
     - name: Build and Restart Application
       uses: appleboy/ssh-action@v0.1.8
       with:
@@ -59,9 +59,13 @@ jobs:
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
-          cd /home/ubuntu/cd/ftt_backend/
+          if [ -d "/home/ubuntu/ftt_backend/" ]; then
+            cd /home/ubuntu/ftt_backend/
+          else
+            echo "Error: /home/ubuntu/ftt_backend/ does not exist"
+            exit 1
+          fi
           chmod +x ./gradlew
           ./gradlew clean build -PreactDirPath=/home/ubuntu/ftt_frontend
           pkill -f 'java -jar' || true
-          nohup java -jar build/libs/*.jar > /dev/null 2>&1 &
-
+          nohup java -jar build/libs/*.jar > application.log 2>&1 &
