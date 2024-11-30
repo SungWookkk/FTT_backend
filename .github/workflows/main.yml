@@ -36,7 +36,7 @@ jobs:
         mkdir -p src/main/resources/static
         cp -r ftt_frontend/build/* src/main/resources/static/
 
-    # 5. Backend 코드를 EC2 서버로 동기화 (application.properties 제외)
+    # 5. Backend 코드를 EC2 서버로 동기화 (application.properties와 build.gradle 제외)
     - name: Sync Backend to EC2
       run: |
         mkdir -p ~/.ssh
@@ -44,6 +44,7 @@ jobs:
         chmod 600 ~/.ssh/id_rsa
         rsync -aq --stats --human-readable \
           --exclude 'application.properties' \
+          --exclude 'build.gradle' \
           --exclude '.git/' \
           --exclude '.github/' \
           --exclude 'README.md' \
@@ -67,6 +68,6 @@ jobs:
             exit 1
           fi
           chmod +x ./gradlew
-          ./gradlew clean build -PreactDirPath=/home/ubuntu/ftt_frontend/build
+          ./gradlew clean build -PreactDirPath=/home/ubuntu/ftt_frontend
           pkill -f 'java -jar' || true
           nohup java -jar build/libs/*.jar > application.log 2>&1 &
