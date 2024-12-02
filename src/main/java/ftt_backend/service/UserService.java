@@ -8,6 +8,7 @@ import ftt_backend.model.UserInfo;
 import ftt_backend.config.JwtUtils;
 import ftt_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -17,11 +18,15 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
     private JwtUtils jwtUtils;
+
+    public UserService(PasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
+    }
+
 
     public void saveUser(UserInfo user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
