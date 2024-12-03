@@ -23,7 +23,7 @@ public class AuthController {
         return ResponseEntity.ok("User registered successfully!");
     }
 
-    // 로그인
+    // 로그인 로직
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody UserInfo loginRequest) {
         String token = userService.authenticate(loginRequest.getUserId(), loginRequest.getPassword());
