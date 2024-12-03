@@ -27,6 +27,6 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody UserInfo loginRequest) {
         String token = userService.authenticate(loginRequest.getUserId(), loginRequest.getPassword());
-        return ResponseEntity.ok(token);
+        return ResponseEntity.ok(token); // 토큰 전달
     }
 }
