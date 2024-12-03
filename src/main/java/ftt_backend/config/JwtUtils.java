@@ -21,7 +21,7 @@ public class JwtUtils {
     // .env 파일에서 jwt.secret 값을 로드하고 SecretKey 객체로 변환
     public JwtUtils() {
         Dotenv dotenv = Dotenv.configure().load();
-        String secret = dotenv.get("jwt.secret");
+        String secret = dotenv.get("JWT_SECRET");
 
         if (secret == null || secret.length() < 32) {
             throw new IllegalArgumentException("Secret key must be at least 32 characters.");
