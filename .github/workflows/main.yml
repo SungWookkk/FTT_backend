@@ -74,6 +74,16 @@ jobs:
             pkill -f 'java -jar'
           fi
           nohup java -jar build/libs/*.jar > application.log 2>&1 &
+          # 정상적으로 실행되었는지 확인
+          sleep 5
+          if pgrep -f 'java -jar'; then
+            echo "Application started successfully!"
+            exit 0 # 성공 상태 코드 반환
+          else
+          echo "Application failed to start!"
+          exit 1 # 실패 상태 코드 반환
+          fi
+
     
     # 7. 성공적으로 배포되었음을 표시하기 위한 확인 단계
     - name: Verify Deployment Success
