@@ -68,20 +68,29 @@ jobs:
             echo "Error: /home/ubuntu/ftt_backend/ does not exist"
             exit 1
           fi
+          # Gradle 빌드 수행
           chmod +x ./gradlew
-          ./gradlew clean build -x test -PreactDirPath=/home/ubuntu/ftt_frontend || exit 0
+          ./gradlew clean build -x test -PreactDirPath=/home/ubuntu/ftt_frontend || exit 1
+          
+          # 기존 Java 프로세스 종료
           if pgrep -f 'java -jar'; then
-            pkill -f 'java -jar'
+           pkill -f 'java -jar'
+            echo "Existing Java process stopped."
+          else
+            echo "No existing Java process found."
           fi
+
+          # 새 Java 프로세스 시작
           nohup java -jar build/libs/*.jar > application.log 2>&1 &
-          # 정상적으로 실행되었는지 확인
+          echo "Application starting..."
+          # 5초 대기 후 실행 여부 확인
           sleep 5
           if pgrep -f 'java -jar'; then
             echo "Application started successfully!"
-            exit 0 # 성공 상태 코드 반환
+            exit 0  # 성공 코드 반환
           else
-          echo "Application failed to start!"
-          exit 1 # 실패 상태 코드 반환
+            echo "Application failed to start!"
+            exit 1  # 실패 코드 반환
           fi
 
     
