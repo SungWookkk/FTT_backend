@@ -61,6 +61,7 @@ jobs:
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
+          set -e
           if [ -d "/home/ubuntu/ftt_backend/" ]; then
             cd /home/ubuntu/ftt_backend/
           else
@@ -69,5 +70,13 @@ jobs:
           fi
           chmod +x ./gradlew
           ./gradlew clean build -x test -PreactDirPath=/home/ubuntu/ftt_frontend
-          pkill -f 'java -jar' || true
+          if pgrep -f 'java -jar'; then
+            pkill -f 'java -jar'
+          fi
           nohup java -jar build/libs/*.jar > application.log 2>&1 &
+    
+    # 7. 성공적으로 배포되었음을 표시하기 위한 확인 단계
+    - name: Verify Deployment Success
+      run: |
+        ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_HOST }} "pgrep -f 'java -jar' || { echo 'Application is not running'; exit 1; }"
+      shell: bash
