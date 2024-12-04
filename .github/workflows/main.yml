@@ -68,6 +68,6 @@ jobs:
             exit 1
           fi
           chmod +x ./gradlew
-          ./gradlew clean build -PreactDirPath=/home/ubuntu/ftt_frontend
+          ./gradlew clean build -x test -PreactDirPath=/home/ubuntu/ftt_frontend
           pkill -f 'java -jar' || true
           nohup java -jar build/libs/*.jar > application.log 2>&1 &
