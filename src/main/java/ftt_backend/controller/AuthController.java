@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -20,13 +22,12 @@ public class AuthController {
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody UserInfo userInfo) {
         userService.saveUser(userInfo);
-        return ResponseEntity.ok("User registered successfully!");
+        return ResponseEntity.ok("회원가입 성공!");
     }
 
-    // 로그인 로직
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody UserInfo loginRequest) {
         String token = userService.authenticate(loginRequest.getUserId(), loginRequest.getPassword());
-        return ResponseEntity.ok(token); // 토큰 전달
+        return ResponseEntity.ok(token);
     }
 }

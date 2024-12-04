@@ -31,7 +31,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable()) // CSRF 비활성화
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/static/**", "/index.html", "/favicon.ico", "/api/auth/**").permitAll() // 인증 없이 접근 허용
+                        .requestMatchers("/","/signup", "/login", "/static/**", "/index.html", "/favicon.ico", "/api/auth/**").permitAll() // 인증 없이 접근 허용
                         .anyRequest().authenticated() // 그 외 요청은 인증 필요
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(authenticationManager, jwtUtils),
