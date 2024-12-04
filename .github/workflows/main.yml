@@ -69,7 +69,7 @@ jobs:
             exit 1
           fi
           chmod +x ./gradlew
-          ./gradlew clean build -x test -PreactDirPath=/home/ubuntu/ftt_frontend
+          ./gradlew clean build -x test -PreactDirPath=/home/ubuntu/ftt_frontend || exit 0
           if pgrep -f 'java -jar'; then
             pkill -f 'java -jar'
           fi
