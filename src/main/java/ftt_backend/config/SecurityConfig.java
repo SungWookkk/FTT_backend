@@ -29,14 +29,28 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager authenticationManager) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // CSRF 비활성화
+                .csrf(csrf -> csrf.disable()) // CSRF 보호 비활성화
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/","/signup", "/login", "/static/**", "/index.html", "/favicon.ico", "/api/auth/**").permitAll() // 인증 없이 접근 허용
-                        .anyRequest().authenticated() // 그 외 요청은 인증 필요
+                        .requestMatchers(
+                                "/",
+                                "/signup",
+                                "/login",
+                                "/dashboard",
+                                "/static/**",
+                                "/index.html",
+                                "/favicon.ico",
+                                "/api/auth/**",
+                                "/manifest.json",
+                                "/assets/**"
+                        ).permitAll()
+                        .anyRequest().authenticated()
                 )
+
+                // JWT 필터 추가
                 .addFilterBefore(new JwtAuthenticationFilter(authenticationManager, jwtUtils),
-                        UsernamePasswordAuthenticationFilter.class) // JWT 필터 추가
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)); // 세션 비활성화
+                        UsernamePasswordAuthenticationFilter.class)
+                // 세션 관리: STATELESS (세션 비활성화)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         return http.build();
     }
@@ -60,4 +74,5 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
         return http.getSharedObject(AuthenticationManagerBuilder.class).build();
     }
+    
 }

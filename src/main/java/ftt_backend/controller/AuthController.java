@@ -6,6 +6,7 @@ package ftt_backend.controller;
 import ftt_backend.model.UserInfo;
 import ftt_backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +28,14 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody UserInfo loginRequest) {
-        String token = userService.authenticate(loginRequest.getUserId(), loginRequest.getPassword());
-        return ResponseEntity.ok(token);
+        System.out.println("로그인 요청: " + loginRequest.getUserId());
+        try {
+            String token = userService.authenticate(loginRequest.getUserId(), loginRequest.getPassword());
+            return ResponseEntity.ok(Map.of("token", token));
+        } catch (Exception e) {
+            System.out.println("로그인 실패: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("로그인 실패");
+        }
     }
+
 }
