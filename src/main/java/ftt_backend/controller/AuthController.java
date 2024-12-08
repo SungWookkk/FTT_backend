@@ -28,14 +28,10 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody UserInfo loginRequest) {
-        System.out.println("로그인 요청: " + loginRequest.getUserId());
-        try {
-            String token = userService.authenticate(loginRequest.getUserId(), loginRequest.getPassword());
-            return ResponseEntity.ok(Map.of("token", token));
-        } catch (Exception e) {
-            System.out.println("로그인 실패: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("로그인 실패");
+        String token = userService.authenticate(loginRequest.getUserId(), loginRequest.getPassword());
+        if (token == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid credentials");
         }
+        return ResponseEntity.ok(Map.of("token", token));
     }
-
 }

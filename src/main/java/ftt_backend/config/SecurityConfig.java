@@ -32,25 +32,22 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable()) // CSRF 보호 비활성화
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/",
-                                "/signup",
-                                "/login",
-                                "/dashboard",
-                                "/static/**",
-                                "/index.html",
-                                "/favicon.ico",
-                                "/api/auth/**",
-                                "/manifest.json",
-                                "/assets/**"
+                                "/",              // 루트 경로
+                                "/signup",        // 회원가입
+                                "/login",         // 로그인
+                                "/dashboard",     // 대시보드
+                                "/favicon.ico",   // 파비콘
+                                "/manifest.json", // React Manifest
+                                "/logo192.png",   // React 로고
+                                "/static/**",     // React 정적 리소스
+                                "/api/auth/**",   // 인증 API
+                                "/**"             // 모든 경로 허용 (React Router 지원)
                         ).permitAll()
-                        .anyRequest().authenticated()
+                        .anyRequest().authenticated() // 나머지는 인증 필요
                 )
-
-                // JWT 필터 추가
                 .addFilterBefore(new JwtAuthenticationFilter(authenticationManager, jwtUtils),
-                        UsernamePasswordAuthenticationFilter.class)
-                // 세션 관리: STATELESS (세션 비활성화)
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                        UsernamePasswordAuthenticationFilter.class) // JWT 필터 추가
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)); // 세션 비활성화
 
         return http.build();
     }
@@ -74,5 +71,4 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
         return http.getSharedObject(AuthenticationManagerBuilder.class).build();
     }
-    
 }

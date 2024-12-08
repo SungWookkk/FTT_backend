@@ -1,6 +1,3 @@
-/*
- * 회원가입 및 로그인을 처리하는 서비스 클래스
- */
 package ftt_backend.service;
 
 import ftt_backend.model.UserInfo;
@@ -19,7 +16,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    private JwtUtils jwtUtils;
+    private JwtUtils jwtUtils; // JwtUtils를 사용
 
     public UserService(PasswordEncoder passwordEncoder) {
         this.passwordEncoder = passwordEncoder;
@@ -34,12 +31,16 @@ public class UserService {
 
     // 로그인
     public String authenticate(String userId, String password) {
+        System.out.println("userId: " + userId); // 요청된 userId 출력
         UserInfo user = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을수 없습니다."));
-        if (passwordEncoder.matches(password, user.getPassword())) {
-            return jwtUtils.generateToken(user.getUserId());
-        } else {
-            throw new RuntimeException("Invalid credentials");
+        System.out.println("User found: " + user); // 검색된 사용자 정보 출력
+
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new RuntimeException("비밀번호가 일치하지 않습니다.");
         }
+
+        // JwtUtils를 사용하여 토큰 생성
+        return jwtUtils.generateToken(user.getUserId());
     }
 }
