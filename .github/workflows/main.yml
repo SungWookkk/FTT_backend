@@ -81,8 +81,9 @@ jobs:
           fi
 
           # 새 Java 프로세스 시작 (nohup과 & 후 즉시 종료처리 추가)
-          nohup java -jar build/libs/*.jar > application.log 2>&1 &
-          sleep 2  # 짧게 대기 후 명령 종료
+          nohup java -jar build/libs/*.jar > application.log 2>&1 < /dev/null &
+          disown
+          sleep 3  # 짧게 대기 후 명령 종료
           echo "✅ Application deployment triggered!
 
     
