@@ -40,7 +40,7 @@ jobs:
     - name: Sync Backend to EC2
       run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           rsync -aq --stats --human-readable \
           --exclude 'application.properties' \
