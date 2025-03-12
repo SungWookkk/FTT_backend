@@ -80,9 +80,10 @@ jobs:
           echo "No existing Java process found."
           fi
 
-          # 애플리케이션 실행 (완전 격리 방식으로 개선!)
-          nohup java -jar build/libs/*.jar > application.log 2>&1 &
-          disown
+          # SSH 세션에서 완전 격리된 상태로 애플리케이션 실행 (확실한 해결법)
+          setsid nohup java -jar build/libs/*.jar > application.log 2>&1 &
+          sleep 3
+          echo "✅ Application deployment triggered successfully!"
           
           # SSH 세션 종료 명시적 처리
           exit 0
