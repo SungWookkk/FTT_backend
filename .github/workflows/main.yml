@@ -80,12 +80,12 @@ jobs:
           echo "No existing Java process found."
           fi
 
-          # 새 Java 프로세스 시작 (nohup과 & 후 즉시 종료처리 추가)
-          nohup java -jar build/libs/*.jar > application.log 2>&1 < /dev/null &
+          # 애플리케이션 실행 (완전 격리 방식으로 개선!)
+          nohup java -jar build/libs/*.jar > application.log 2>&1 &
           disown
-          sleep 3  # 짧게 대기 후 명령 종료
-          echo "✅ Application deployment triggered!
-
+          
+          # SSH 세션 종료 명시적 처리
+          exit 0
     
     # 7. 성공적으로 배포되었음을 표시하기 위한 확인 단계
     - name: Verify Deployment Success
