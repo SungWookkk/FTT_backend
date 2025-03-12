@@ -39,10 +39,10 @@ jobs:
     # 5. Backend 코드를 EC2 서버로 동기화 (application.properties와 build.gradle 제외)
     - name: Sync Backend to EC2
       run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        rsync -aq --stats --human-readable \
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          rsync -aq --stats --human-readable \
           --exclude 'application.properties' \
           --exclude 'build.gradle' \
           --exclude '.git/' \
