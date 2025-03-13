@@ -60,6 +60,7 @@ jobs:
         host: ${{ secrets.EC2_HOST }}
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_SSH_KEY }}
+        sync: true
         timeout: "600s"
         command_timeout: "300s"
         script: |
@@ -83,7 +84,7 @@ jobs:
           fi
 
           # SSH 세션에서 완전 격리된 상태로 애플리케이션 실행 (확실한 해결법)
-          setsid nohup java -jar build/libs/*.jar > application.log 2>&1 &
+          nohup java -jar build/libs/*.jar > application.log 2>&1 &
           sleep 3
           echo "✅ Application deployment triggered successfully!"
           
