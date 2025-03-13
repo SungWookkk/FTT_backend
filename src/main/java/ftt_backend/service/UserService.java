@@ -43,4 +43,11 @@ public class UserService {
         // JwtUtils를 사용하여 토큰 생성
         return jwtUtils.generateToken(user.getUserId());
     }
+    // userId를 기준으로 사용자 정보를 검색하는 메서드
+    public UserInfo findByUserId(String userId) {
+        // userRepository의 findByUserId 메서드를 호출하여 Optional<UserInfo> 반환
+        // 사용자가 없을 경우 예외를 발생시켜 오류를 명확히 함
+        return userRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+    }
 }
