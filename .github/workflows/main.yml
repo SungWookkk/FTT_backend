@@ -86,5 +86,6 @@ jobs:
             echo "✅ Application deployment triggered successfully!"
 
             # SSH 스크립트 정상 종료
-            exit 0
-          ENDSSH
+            exit 
+            ENDSSH
+            echo "SSH exit code: $?"
