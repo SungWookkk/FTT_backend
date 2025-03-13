@@ -55,11 +55,13 @@ jobs:
 
     # 6. EC2 서버에서 빌드 및 애플리케이션 실행
     - name: Build and Restart Application
-      uses: appleboy/ssh-action@v0.1.8
+      uses: appleboy/ssh-action@v0.1.10  
       with:
         host: ${{ secrets.EC2_HOST }}
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_SSH_KEY }}
+        timeout: 600
+        command_timeout: 300
         script: |
           set -e
           if [ -d "/home/ubuntu/ftt_backend/" ]; then
@@ -86,6 +88,7 @@ jobs:
           echo "✅ Application deployment triggered successfully!"
           
           # SSH 세션 종료 명시적 처리
+          script_stop: |
           exit 0
     
     # 7. 성공적으로 배포되었음을 표시하기 위한 확인 단계
