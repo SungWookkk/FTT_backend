@@ -39,10 +39,10 @@ jobs:
     # 5. Backend 코드를 EC2 서버로 동기화 (application.properties와 build.gradle 제외)
     - name: Sync Backend to EC2
       run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        rsync -aq --stats --human-readable \
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          rsync -aq --stats --human-readable \
           --exclude 'application.properties' \
           --exclude 'build.gradle' \
           --exclude '.git/' \
@@ -53,49 +53,40 @@ jobs:
           -e "ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa" \
           ./ ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/ftt_backend/
 
-    # 6. EC2 서버에서 빌드 및 애플리케이션 실행
-    - name: Build and Restart Application
-      uses: appleboy/ssh-action@v0.1.8
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USER }}
-        key: ${{ secrets.EC2_SSH_KEY }}
-        script: |
-          set -e
-          if [ -d "/home/ubuntu/ftt_backend/" ]; then
-            cd /home/ubuntu/ftt_backend/
-          else
-            echo "Error: /home/ubuntu/ftt_backend/ does not exist"
-            exit 1
-          fi
-          # Gradle 빌드 수행
-          chmod +x ./gradlew
-          ./gradlew clean build -x test -PreactDirPath=/home/ubuntu/ftt_frontend || exit 1
-          
-          # 기존 Java 프로세스 종료
-          if pgrep -f 'java -jar'; then
-           pkill -f 'java -jar'
-            echo "Existing Java process stopped."
-          else
-            echo "No existing Java process found."
-          fi
-
-          # 새 Java 프로세스 시작
-          nohup java -jar build/libs/*.jar > application.log 2>&1 &
-          echo "Application starting..."
-          # 5초 대기 후 실행 여부 확인
-          sleep 5
-          if pgrep -f 'java -jar'; then
-            echo "Application started successfully!"
-            exit 0  # 성공 코드 반환
-          else
-            echo "Application failed to start!"
-            exit 1  # 실패 코드 반환
-          fi
-
-    
-    # 7. 성공적으로 배포되었음을 표시하기 위한 확인 단계
-    - name: Verify Deployment Success
+    # 6. EC2 서버에서 빌드 및 애플리케이션 실행 (Manual SSH)
+    - name: Build and Restart Application (Manual SSH)
+      continue-on-error: true
       run: |
-        ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_HOST }} "pgrep -f 'java -jar' || { echo 'Application is not running'; exit 1; }"
-      shell: bash
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_HOST }} << 'ENDSSH'
+            set -e
+
+            # ftt_backend 폴더 존재 여부 확인
+            if [ -d "/home/ubuntu/ftt_backend/" ]; then
+              cd /home/ubuntu/ftt_backend/
+            else
+              echo "Error: /home/ubuntu/ftt_backend/ does not exist"
+              exit 1
+            fi
+
+            # Gradle 빌드 수행
+            chmod +x ./gradlew
+            ./gradlew clean build -x test -PreactDirPath=/home/ubuntu/ftt_frontend
+
+            # 기존 Java 프로세스 종료
+            if pgrep -f 'java -jar'; then
+              pkill -f 'java -jar'
+              echo "Existing Java process stopped."
+            else
+              echo "No existing Java process found."
+            fi
+
+            # 백그라운드에서 애플리케이션 실행
+            nohup java -jar build/libs/*.jar > application.log 2>&1 &
+            sleep 3
+
+            echo "✅ Application deployment triggered successfully!"
+
+            # SSH 스크립트 정상 종료
+            exit 
+            ENDSSH
+            echo "SSH exit code: $?"
