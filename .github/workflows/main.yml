@@ -58,6 +58,7 @@ jobs:
       run: |
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_HOST }} << 'ENDSSH'
             set -e
+
             # ftt_backend 폴더 존재 여부 확인
             if [ -d "/home/ubuntu/ftt_backend/" ]; then
               cd /home/ubuntu/ftt_backend/
@@ -68,7 +69,7 @@ jobs:
 
             # Gradle 빌드 수행
             chmod +x ./gradlew
-            ./gradlew clean build -x test -PreactDirPath=/home/ubuntu/ftt_frontend || exit 1
+            ./gradlew clean build -x test -PreactDirPath=/home/ubuntu/ftt_frontend
 
             # 기존 Java 프로세스 종료
             if pgrep -f 'java -jar'; then
@@ -81,6 +82,7 @@ jobs:
             # 백그라운드에서 애플리케이션 실행
             nohup java -jar build/libs/*.jar > application.log 2>&1 &
             sleep 3
+
             echo "✅ Application deployment triggered successfully!"
 
             # SSH 스크립트 정상 종료
