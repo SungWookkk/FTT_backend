@@ -53,40 +53,36 @@ jobs:
           -e "ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa" \
           ./ ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/ftt_backend/
 
-    # 6. EC2 서버에서 빌드 및 애플리케이션 실행
-    - name: Build and Restart Application
-      uses: appleboy/ssh-action@v0.1.10  
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USER }}
-        key: ${{ secrets.EC2_SSH_KEY }}
-        sync: true
-        timeout: "600s"
-        command_timeout: "300s"
-        script: |
-          set -e
-          if [ -d "/home/ubuntu/ftt_backend/" ]; then
-            cd /home/ubuntu/ftt_backend/
-          else
-            echo "Error: /home/ubuntu/ftt_backend/ does not exist"
-            exit 1
-          fi
-          # Gradle 빌드 수행
-          chmod +x ./gradlew
-          ./gradlew clean build -x test -PreactDirPath=/home/ubuntu/ftt_frontend || exit 1
-          
-          # 기존 Java 프로세스 종료
-          if pgrep -f 'java -jar'; then
-          pkill -f 'java -jar'
-          echo "Existing Java process stopped."
-          else
-          echo "No existing Java process found."
-          fi
+    # 6. EC2 서버에서 빌드 및 애플리케이션 실행 (Manual SSH)
+    - name: Build and Restart Application (Manual SSH)
+      run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_HOST }} << 'ENDSSH'
+            set -e
+            # ftt_backend 폴더 존재 여부 확인
+            if [ -d "/home/ubuntu/ftt_backend/" ]; then
+              cd /home/ubuntu/ftt_backend/
+            else
+              echo "Error: /home/ubuntu/ftt_backend/ does not exist"
+              exit 1
+            fi
 
-          # SSH 세션에서 완전 격리된 상태로 애플리케이션 실행 (확실한 해결법)
-          nohup java -jar build/libs/*.jar > application.log 2>&1 &
-          sleep 3
-          echo "✅ Application deployment triggered successfully!"
-          
-          # SSH 세션 종료 명시적 처리
-          exit 0
+            # Gradle 빌드 수행
+            chmod +x ./gradlew
+            ./gradlew clean build -x test -PreactDirPath=/home/ubuntu/ftt_frontend || exit 1
+
+            # 기존 Java 프로세스 종료
+            if pgrep -f 'java -jar'; then
+              pkill -f 'java -jar'
+              echo "Existing Java process stopped."
+            else
+              echo "No existing Java process found."
+            fi
+
+            # 백그라운드에서 애플리케이션 실행
+            nohup java -jar build/libs/*.jar > application.log 2>&1 &
+            sleep 3
+            echo "✅ Application deployment triggered successfully!"
+
+            # SSH 스크립트 정상 종료
+            exit 0
+          ENDSSH
