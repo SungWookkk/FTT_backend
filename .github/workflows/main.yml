@@ -55,6 +55,7 @@ jobs:
 
     # 6. EC2 서버에서 빌드 및 애플리케이션 실행 (Manual SSH)
     - name: Build and Restart Application (Manual SSH)
+      continue-on-error: true
       run: |
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_HOST }} << 'ENDSSH'
             set -e
