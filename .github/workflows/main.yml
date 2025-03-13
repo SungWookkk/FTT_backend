@@ -60,8 +60,8 @@ jobs:
         host: ${{ secrets.EC2_HOST }}
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_SSH_KEY }}
-        timeout: 600
-        command_timeout: 300
+        timeout: "600s"
+        command_timeout: "300s"
         script: |
           set -e
           if [ -d "/home/ubuntu/ftt_backend/" ]; then
@@ -88,7 +88,7 @@ jobs:
           echo "✅ Application deployment triggered successfully!"
           
           # SSH 세션 종료 명시적 처리
-          script_stop: |
+        script_stop: |
           exit 0
     
     # 7. 성공적으로 배포되었음을 표시하기 위한 확인 단계
