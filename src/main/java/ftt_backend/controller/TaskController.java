@@ -5,6 +5,7 @@
 package ftt_backend.controller;
 
 import ftt_backend.model.Task;
+import ftt_backend.repository.TaskRepository;
 import ftt_backend.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,8 @@ public class TaskController {
     @Autowired
     private TaskService taskService;
 
+    @Autowired
+    private TaskRepository taskRepository;
     // 모든 Task 조회
     @GetMapping("")
     public ResponseEntity<?> getAllTasks() {
@@ -36,12 +39,18 @@ public class TaskController {
         return ResponseEntity.ok(createdTask);
     }
 
-    // Task 수정
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateTask(@PathVariable Long id, @RequestBody Task updatedTask) {
-        // id에 해당하는 Task를 updatedTask의 필드로 수정
-        Task task = taskService.updateTask(id, updatedTask);
-        // 수정된 Task 엔티티를 JSON 형태로 반환
+    // 단일 Task 조회: GET /api/tasks/{id}
+    @GetMapping("/{id}")
+    public ResponseEntity<Task> getTaskById(@PathVariable Long id) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("해당 Task가 존재하지 않습니다."));
+
+        // task.files 에는 연관된 TaskFile 목록이 들어있어야 함 (EAGER라면 자동 로드)
+        return ResponseEntity.ok(task);
+    }
+    @PutMapping("/{taskId}")
+    public ResponseEntity<Task> updateTask(@PathVariable Long taskId, @RequestBody Task updatedTask) {
+        Task task = taskService.updateTask(taskId, updatedTask);
         return ResponseEntity.ok(task);
     }
 }
