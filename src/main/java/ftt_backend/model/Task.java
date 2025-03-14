@@ -4,9 +4,12 @@
  */
 package ftt_backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "task")
@@ -46,9 +49,18 @@ public class Task {
     @Column(name = "memo", columnDefinition = "TEXT")
     private String memo;
 
+
+    // TaskFile과 1:N 매핑
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JsonIgnoreProperties(value = {"task"})
+    // ↑ TaskFile에서 'task' 필드는 무시 > 무한 루프 방지
+    private List<TaskFile> files = new ArrayList<>();
+
     // 작업 생성자를 나타내는 사용자와의 다대일 관계
     // 하나의 UserInfo가 여러 Task를 가질 수 있으므로 ManyToOne 관계
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private UserInfo user;
+
+
 }
