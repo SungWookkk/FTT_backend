@@ -1,3 +1,24 @@
+3/12 - CI/CD 배포 멈춤 현상 문제 
+
+3/13 - 사용자 로그아웃 로직 추가 및 DataLoader(서버 실행시 사용자 자동 추가)
+
+3/13 - FE Task 초기 로직 설계
+
+- 모든 Task 조회 / 생성 / 수정 초기 로직 설계
+- REST API : FE와 BE axios 통신 설계(TaskController)
+- 위 로직에 따른 비지니스 로직 설계
+
+
+
+
+
+
+
+
+
+
+
+
 
 이 주제는 AI 기반 생산성 향상과 미루기 방지, 패턴 분석, 동기부여 시스템을 포함한 To-Do 리스트 웹 애플리케이션을 강조합니다
 아래는 React, Spring Boot, Spring JPA, Security, Batch, WebSocket, Actuator, OpenAI API, MySQL을 사용하여 To-Do 리스트 프로젝트의 기능을 구현하는 상세한 기술 적용 계획입니다.
