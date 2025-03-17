@@ -48,9 +48,26 @@ public class TaskController {
         // task.files 에는 연관된 TaskFile 목록이 들어있어야 함 (EAGER라면 자동 로드)
         return ResponseEntity.ok(task);
     }
+
+    //수정 모드
     @PutMapping("/{taskId}")
     public ResponseEntity<Task> updateTask(@PathVariable Long taskId, @RequestBody Task updatedTask) {
         Task task = taskService.updateTask(taskId, updatedTask);
         return ResponseEntity.ok(task);
+    }
+
+    //삭제 모드
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteTask(@PathVariable Long id) {
+        taskService.deleteTask(id); // 내부에서 taskRepository.deleteById(id)
+        return ResponseEntity.ok("작업" + id + " 삭제.");
+    }
+    //다중 삭제하기
+    @DeleteMapping("")
+    public ResponseEntity<?> deleteTasks(@RequestBody List<Long> ids) {
+        for (Long id : ids) {
+            taskService.deleteTask(id);
+        }
+        return ResponseEntity.ok("작업들 삭제 : " + ids);
     }
 }

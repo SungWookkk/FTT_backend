@@ -47,4 +47,13 @@ public class TaskService {
         // 변경된 Task를 DB에 저장 후 반환
         return taskRepository.save(existingTask);
     }
+    // 특정 Task 삭제
+    public void deleteTask(Long id) {
+        //  DB에서 해당 Task 조회
+        Task existingTask = taskRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Task의 id를 찾을수 없어요 " + id));
+
+        //  조회된 Task 삭제
+        taskRepository.delete(existingTask);
+    }
 }
