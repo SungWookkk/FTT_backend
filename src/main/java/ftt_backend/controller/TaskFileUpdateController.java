@@ -68,4 +68,15 @@ public class TaskFileUpdateController {
                 .contentType(MediaType.parseMediaType(mimeType))
                 .body(resource);
     }
+    @DeleteMapping("/{taskId}/files/{fileId}")
+    public ResponseEntity<?> deleteFile(
+            @PathVariable Long taskId,
+            @PathVariable Long fileId
+    ) throws IOException {
+        // Service 계층에 삭제 로직 위임
+        taskFileUpdateService.deleteFile(taskId, fileId);
+        // 성공 시 200 OK 응답
+        return ResponseEntity.ok("File deleted");
+    }
+
 }

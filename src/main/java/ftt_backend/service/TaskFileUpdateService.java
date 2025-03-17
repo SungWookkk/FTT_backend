@@ -84,7 +84,7 @@ public class TaskFileUpdateService {
         TaskFile taskFile = getTaskFile(fileId);
         Path path = Paths.get(taskFile.getFilePath());
         if (!Files.exists(path)) {
-            throw new IOException("File not found on disk");
+            throw new IOException("경로에서 파일을 찾을수 없습니다");
         }
         return path;
     }
@@ -96,6 +96,24 @@ public class TaskFileUpdateService {
      */
     public TaskFile getTaskFile(Long fileId) {
         return taskFileUpdateRepository.findById(fileId)
-                .orElseThrow(() -> new RuntimeException("File not found"));
+                .orElseThrow(() -> new RuntimeException("파일을 찾을수 없습니다"));
+    }
+    public void deleteFile(Long taskId, Long fileId) throws IOException {
+        // 1) DB에서 TaskFile 조회
+        TaskFile taskFile = getTaskFile(fileId);
+
+        // 2) TaskFile이 속한 Task의 ID가 맞는지 확인 (보안/정합성)
+        if (!taskFile.getTask().getId().equals(taskId)) {
+            throw new RuntimeException("해당 파일은 Task " + taskId + "에 속해있지 않습니다.");
+        }
+
+        // 3) DB에서 삭제
+        taskFileUpdateRepository.delete(taskFile);
+
+        // 4) 로컬 디스크에서 파일 삭제
+        Path path = Paths.get(taskFile.getFilePath());
+        if (Files.exists(path)) {
+            Files.delete(path);
+        }
     }
 }
