@@ -9,6 +9,7 @@ import ftt_backend.repository.TaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -24,15 +25,24 @@ public class TaskService {
 
     // 새 Task 생성
     public Task createTask(Task task) {
-        // 필요시 task의 생성일시나 기본 상태값 설정 가능
+        // "지금" 생성된 것이므로 createdAt에 현재 시간을 넣는다
+        task.setCreatedAt(LocalDateTime.now());
+
+        // 필요한 기본값(status 등)도 여기서 설정 가능
+        if (task.getStatus() == null) {
+            task.setStatus("TODO");
+        }
+
         return taskRepository.save(task);
     }
+
+
 
     // 특정 Task 수정
     public Task updateTask(Long id, Task updatedTask) {
         // 기존 Task를 DB에서 조회
         Task existingTask = taskRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Task not found with id: " + id));
+                .orElseThrow(() -> new RuntimeException("id에 따른 작업을 찾을수 없습니다" + id));
 
         // 변경할 필드들만 업데이트
         existingTask.setTitle(updatedTask.getTitle());
