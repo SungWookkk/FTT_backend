@@ -41,7 +41,8 @@ public class SecurityConfig {
                                 "/logo192.png",   // React 로고
                                 "/static/**",     // React 정적 리소스
                                 "/api/auth/**",   // 인증 API
-                                "/**"             // 모든 경로 허용 (React Router 지원)
+                                "/**",             // 모든 경로 허용 (React Router 지원)
+                                "/api/tasks/**"
                         ).permitAll()
                         .anyRequest().authenticated() // 나머지는 인증 필요
                 )

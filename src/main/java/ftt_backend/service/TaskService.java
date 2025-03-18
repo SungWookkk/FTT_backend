@@ -5,7 +5,9 @@
 package ftt_backend.service;
 
 import ftt_backend.model.Task;
+import ftt_backend.model.UserInfo;
 import ftt_backend.repository.TaskRepository;
+import ftt_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,20 +20,28 @@ public class TaskService {
     @Autowired
     private TaskRepository taskRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
     // 모든 Task 목록 조회
     public List<Task> getAllTasks() {
         return taskRepository.findAll();
     }
 
-    // 새 Task 생성
-    public Task createTask(Task task) {
-        // "지금" 생성된 것이므로 createdAt에 현재 시간을 넣는다
+    // userId를 추가로 받아 해당 유저의 Task를 생성
+    public Task createTask(Task task, String userId) {
+        // 현재 시간을 createdAt에 기록
         task.setCreatedAt(LocalDateTime.now());
 
-        // 필요한 기본값(status 등)도 여기서 설정 가능
+        // 기본 상태값 설정 (예: TODO)
         if (task.getStatus() == null) {
             task.setStatus("TODO");
         }
+
+        // 작성자 정보 세팅: userId로 사용자 조회
+        UserInfo user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+        task.setUser(user);
 
         return taskRepository.save(task);
     }
