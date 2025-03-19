@@ -50,7 +50,6 @@ public class TaskController {
     public ResponseEntity<?> getMyTasks(
             @RequestParam(value = "userId", required = false, defaultValue = "") String userId) {
         if (userId.isEmpty()) {
-            // userId가 없으면 빈 리스트를 반환하거나, 적절한 기본 동작을 수행
             return ResponseEntity.ok(List.of());
         }
         UserInfo user = userRepository.findByUserId(userId)

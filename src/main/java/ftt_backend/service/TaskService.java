@@ -11,6 +11,7 @@ import ftt_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -31,13 +32,10 @@ public class TaskService {
     // userId를 추가로 받아 해당 유저의 Task를 생성
     public Task createTask(Task task) {
         String userId = task.getUserId();
-        if (userId == null || userId.isBlank()) {
-            throw new RuntimeException("사용자를 찾을수 없음");
-        }
         UserInfo user = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을수 없음 " + userId));
         task.setUser(user);
-        task.setCreatedAt(LocalDateTime.now());
+        task.setCreatedAt(LocalDate.now());
         return taskRepository.save(task);
     }
 

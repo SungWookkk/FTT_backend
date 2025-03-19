@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,11 +37,11 @@ public class Task {
 
     // 작업 마감일 LocalDateTime으로 관리
     @Column(name = "due_date")
-    private LocalDateTime dueDate;
+    private LocalDate dueDate;
 
     // 작업 생성 시각
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private LocalDate createdAt;
 
     // 작업 우선순위 (예: "낮음", "보통", "중요" 등). 최대 20자
     @Column(name = "priority", length = 20)
