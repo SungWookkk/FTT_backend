@@ -1,7 +1,3 @@
-/*
- * TaskController: 클라이언트 요청을 받아서 TaskService를 통해 처리
- * /api/tasks 경로에서 GET, POST, PUT 등을 제공
- */
 package ftt_backend.controller;
 
 import ftt_backend.model.Task;
@@ -10,13 +6,10 @@ import ftt_backend.repository.TaskRepository;
 import ftt_backend.repository.UserRepository;
 import ftt_backend.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/tasks")
@@ -31,31 +24,19 @@ public class TaskController {
     @Autowired
     private UserRepository userRepository;
 
-    // 모든 Task 조회 (관리자용 등)
+    // 모든 Task 조회
     @GetMapping("")
     public ResponseEntity<?> getAllTasks() {
         List<Task> tasks = taskService.getAllTasks();
         return ResponseEntity.ok(tasks);
     }
 
-    // 새 Task 생성 (현재 로그인한 사용자의 Task로 설정)
+    // 새 Task 생성
     @PostMapping("")
-    public ResponseEntity<?> createTask(@RequestBody Task task, Principal principal) {
-        // 인증이 안된 상태라면 에러 반환
-        if (principal == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("인증이 필요합니다.");
-        }
-
-        // principal.getName()은 JWT 생성 시 subject로 설정한 값이어야 합니다.
-        String userId = principal.getName();
-
-        // 만약 taskService.createTask 메서드가 userId도 받아서 작업에 할당하도록 구현되어 있다면:
-        Task createdTask = taskService.createTask(task, userId);
-
+    public ResponseEntity<?> createTask(@RequestBody Task task) {
+        Task createdTask = taskService.createTask(task);
         return ResponseEntity.ok(createdTask);
     }
-
     // 단일 Task 조회
     @GetMapping("/{id}")
     public ResponseEntity<Task> getTaskById(@PathVariable Long id) {
@@ -64,10 +45,15 @@ public class TaskController {
         return ResponseEntity.ok(task);
     }
 
-    // "내 작업" 조회: 로그인한 사용자의 작업만 조회
+    // "내 작업" 조회
     @GetMapping("/my-tasks")
-    public ResponseEntity<?> getMyTasks(Principal principal) {
-        UserInfo user = userRepository.findByUserId(principal.getName())
+    public ResponseEntity<?> getMyTasks(
+            @RequestParam(value = "userId", required = false, defaultValue = "") String userId) {
+        if (userId.isEmpty()) {
+            // userId가 없으면 빈 리스트를 반환하거나, 적절한 기본 동작을 수행
+            return ResponseEntity.ok(List.of());
+        }
+        UserInfo user = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
         List<Task> myTasks = taskRepository.findByUser_UserId(user.getUserId());
         return ResponseEntity.ok(myTasks);

@@ -29,20 +29,15 @@ public class TaskService {
     }
 
     // userId를 추가로 받아 해당 유저의 Task를 생성
-    public Task createTask(Task task, String userId) {
-        // 현재 시간을 createdAt에 기록
-        task.setCreatedAt(LocalDateTime.now());
-
-        // 기본 상태값 설정 (예: TODO)
-        if (task.getStatus() == null) {
-            task.setStatus("TODO");
+    public Task createTask(Task task) {
+        String userId = task.getUserId();
+        if (userId == null || userId.isBlank()) {
+            throw new RuntimeException("사용자를 찾을수 없음");
         }
-
-        // 작성자 정보 세팅: userId로 사용자 조회
         UserInfo user = userRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을수 없음 " + userId));
         task.setUser(user);
-
+        task.setCreatedAt(LocalDateTime.now());
         return taskRepository.save(task);
     }
 

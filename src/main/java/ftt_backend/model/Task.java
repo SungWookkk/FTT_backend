@@ -7,6 +7,9 @@ package ftt_backend.model;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +17,8 @@ import java.util.List;
 @Entity
 @Table(name = "task")
 @Data
+@Getter
+@Setter
 public class Task {
 
     // 기본 키로 id 컬럼을 사용하 자동 증가
@@ -64,7 +69,11 @@ public class Task {
     // 하나의 UserInfo가 여러 Task를 가질 수 있으므로 ManyToOne 관계
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
+    @Getter
+    @Setter
     private UserInfo user;
 
+    @Transient               // DB 컬럼이 아님
+    private String userId;
 
 }

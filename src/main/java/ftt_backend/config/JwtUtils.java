@@ -41,6 +41,7 @@ public class JwtUtils {
                 .compact();
     }
 
+
     // JWT 토큰 유효성 검증
     public boolean validateToken(String token) {
         try {
@@ -50,6 +51,7 @@ public class JwtUtils {
             return false;
         }
     }
+
 
     // 인증 정보 추출
     public Authentication getAuthentication(String token) {
@@ -61,4 +63,5 @@ public class JwtUtils {
                 .getSubject();
         return new UsernamePasswordAuthenticationToken(username, null, List.of());
     }
+
 }
