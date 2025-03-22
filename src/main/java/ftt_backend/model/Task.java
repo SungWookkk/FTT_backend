@@ -35,7 +35,11 @@ public class Task {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    // 작업 마감일 LocalDateTime으로 관리
+    //시작일
+    @Column(name = "start_date")
+    private LocalDate startDate;
+
+    //마감일
     @Column(name = "due_date")
     private LocalDate dueDate;
 
