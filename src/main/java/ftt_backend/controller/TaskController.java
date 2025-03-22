@@ -1,10 +1,9 @@
-/*
- * TaskController: 클라이언트 요청을 받아서 TaskService를 통해 처리
- * /api/tasks 경로에서 GET, POST, PUT 등을 제공
- */
 package ftt_backend.controller;
 
 import ftt_backend.model.Task;
+import ftt_backend.model.UserInfo;
+import ftt_backend.repository.TaskRepository;
+import ftt_backend.repository.UserRepository;
 import ftt_backend.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,10 +18,15 @@ public class TaskController {
     @Autowired
     private TaskService taskService;
 
+    @Autowired
+    private TaskRepository taskRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
     // 모든 Task 조회
     @GetMapping("")
     public ResponseEntity<?> getAllTasks() {
-        // Task 목록을 조회해 반환
         List<Task> tasks = taskService.getAllTasks();
         return ResponseEntity.ok(tasks);
     }
@@ -30,18 +34,50 @@ public class TaskController {
     // 새 Task 생성
     @PostMapping("")
     public ResponseEntity<?> createTask(@RequestBody Task task) {
-        // 요청 바디에 담긴 Task 데이터를 DB에 저장
         Task createdTask = taskService.createTask(task);
-        // 생성된 Task 엔티티를 JSON 형태로 반환
         return ResponseEntity.ok(createdTask);
     }
-
-    // Task 수정
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateTask(@PathVariable Long id, @RequestBody Task updatedTask) {
-        // id에 해당하는 Task를 updatedTask의 필드로 수정
-        Task task = taskService.updateTask(id, updatedTask);
-        // 수정된 Task 엔티티를 JSON 형태로 반환
+    // 단일 Task 조회
+    @GetMapping("/{id}")
+    public ResponseEntity<Task> getTaskById(@PathVariable Long id) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("해당 Task가 존재하지 않습니다."));
         return ResponseEntity.ok(task);
+    }
+
+    // "내 작업" 조회
+    @GetMapping("/my-tasks")
+    public ResponseEntity<?> getMyTasks(
+            @RequestParam(value = "userId", required = false, defaultValue = "") String userId) {
+        if (userId.isEmpty()) {
+            return ResponseEntity.ok(List.of());
+        }
+        UserInfo user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        List<Task> myTasks = taskRepository.findByUser_UserId(user.getUserId());
+        return ResponseEntity.ok(myTasks);
+    }
+
+    // 수정 Task
+    @PutMapping("/{taskId}")
+    public ResponseEntity<Task> updateTask(@PathVariable Long taskId, @RequestBody Task updatedTask) {
+        Task task = taskService.updateTask(taskId, updatedTask);
+        return ResponseEntity.ok(task);
+    }
+
+    // 단일 Task 삭제
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteTask(@PathVariable Long id) {
+        taskService.deleteTask(id);
+        return ResponseEntity.ok("작업 " + id + " 삭제.");
+    }
+
+    // 다중 Task 삭제
+    @DeleteMapping("")
+    public ResponseEntity<?> deleteTasks(@RequestBody List<Long> ids) {
+        for (Long id : ids) {
+            taskService.deleteTask(id);
+        }
+        return ResponseEntity.ok("작업들 삭제 : " + ids);
     }
 }
