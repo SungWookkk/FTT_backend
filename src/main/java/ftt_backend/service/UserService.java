@@ -1,17 +1,30 @@
 package ftt_backend.service;
 
+import ftt_backend.model.Badge;
+import ftt_backend.model.UserBadge;
 import ftt_backend.model.UserInfo;
 import ftt_backend.config.JwtUtils;
+import ftt_backend.repository.BadgeRepository;
+import ftt_backend.repository.BadgeUserRepository;
 import ftt_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.util.List;
 
 @Service
 public class UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private BadgeRepository badgeRepository;
+
+    @Autowired
+    private BadgeUserRepository badgeUserRepository;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -43,11 +56,34 @@ public class UserService {
         // JwtUtils를 사용하여 토큰 생성
         return jwtUtils.generateToken(user.getUserId());
     }
-    // userId를 기준으로 사용자 정보를 검색하는 메서드
+
+    // 계정 생성시 뱃지 기본 단계 적용
+    public UserInfo createUser(UserInfo userInfo) {
+        // 1) 사용자 정보 저장 (userRepository 사용)
+        UserInfo savedUser = userRepository.save(userInfo);
+
+        // 2) 기본 뱃지 (Badge_01) 찾기
+        Badge defaultBadge = badgeRepository.findById(1L)
+                .orElseThrow(() -> new RuntimeException("기본 뱃지를 찾을 수 없습니다."));
+
+        // 3) UserBadge 엔티티 생성 & 저장 (badgeUserRepository 사용)
+        UserBadge userBadge = new UserBadge();
+        userBadge.setUser(savedUser);
+        userBadge.setBadge(defaultBadge);
+        userBadge.setAcquiredDate(LocalDate.now());
+
+        badgeUserRepository.save(userBadge);
+
+        return savedUser;
+    }
+
+    public List<UserBadge> getUserBadges(Long userId) {
+        // 유저 ID로 해당 사용자의 모든 뱃지 조회
+        return badgeUserRepository.findByUserId(userId);
+    }
     public UserInfo findByUserId(String userId) {
-        // userRepository의 findByUserId 메서드를 호출하여 Optional<UserInfo> 반환
-        // 사용자가 없을 경우 예외를 발생시켜 오류를 명확히 함
         return userRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
     }
+
 }

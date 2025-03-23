@@ -30,6 +30,7 @@ public class AuthController {
         return ResponseEntity.ok("회원가입 성공!");
     }
 
+
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody UserInfo loginRequest) {
         String token = userService.authenticate(loginRequest.getUserId(), loginRequest.getPassword());
@@ -45,6 +46,7 @@ public class AuthController {
                 "userRole", user.getRole()
         ));
     }
+
     // 로그아웃 엔드포인트 추가
     @PostMapping("/logout")
     public ResponseEntity<?> logoutUser(@RequestBody Map<String, String> logoutRequest) {
