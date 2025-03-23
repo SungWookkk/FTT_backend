@@ -1,7 +1,7 @@
 /**
  * DataLoader 클래스는 서버 실행 시 자동으로 기본 사용자 계정을 생성하기 위해 사용
  */
-package ftt_backend.config;
+package ftt_backend.config.dataloader;
 import ftt_backend.model.UserInfo;
 import ftt_backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
