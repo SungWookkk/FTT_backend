@@ -5,10 +5,14 @@ package ftt_backend.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "user_info")
 @Data
+@Getter
+@Setter
 public class UserInfo {
 
     @Id
@@ -36,4 +40,7 @@ public class UserInfo {
 
     @Column(name = "role", nullable = false, length = 20)
     private String role; // 사용자의 권한 (예: USER, ADMIN)
+
+    @Column(name = "profile_image", length = 200)
+    private String profile_image;
 }
