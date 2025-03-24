@@ -26,7 +26,7 @@ public class AuthController {
     // 회원가입
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody UserInfo userInfo) {
-        userService.saveUser(userInfo);
+        userService.createUser(userInfo);
         return ResponseEntity.ok("회원가입 성공!");
     }
 
@@ -42,7 +42,7 @@ public class AuthController {
         return ResponseEntity.ok(Map.of(
                 "token", token,
                 "userName", user.getUsername(),
-                "userId", user.getUserId(),
+                "userId", user.getId(),
                 "userRole", user.getRole()
         ));
     }

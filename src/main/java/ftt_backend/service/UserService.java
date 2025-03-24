@@ -59,19 +59,22 @@ public class UserService {
 
     // 계정 생성시 뱃지 기본 단계 적용
     public UserInfo createUser(UserInfo userInfo) {
-        // 1) 사용자 정보 저장 (userRepository 사용)
+        // 비밀번호 암호화 & 기본 Role 설정
+        userInfo.setPassword(passwordEncoder.encode(userInfo.getPassword()));
+        userInfo.setRole("USER");
+
+        // 1) 사용자 정보 저장
         UserInfo savedUser = userRepository.save(userInfo);
 
         // 2) 기본 뱃지 (Badge_01) 찾기
         Badge defaultBadge = badgeRepository.findById(1L)
                 .orElseThrow(() -> new RuntimeException("기본 뱃지를 찾을 수 없습니다."));
 
-        // 3) UserBadge 엔티티 생성 & 저장 (badgeUserRepository 사용)
+        // 3) UserBadge 엔티티 생성 & 저장
         UserBadge userBadge = new UserBadge();
         userBadge.setUser(savedUser);
         userBadge.setBadge(defaultBadge);
         userBadge.setAcquiredDate(LocalDate.now());
-
         badgeUserRepository.save(userBadge);
 
         return savedUser;
