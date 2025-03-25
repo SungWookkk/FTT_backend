@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -18,39 +19,68 @@ public class UserController {
     @Autowired
     private UserRepository userRepository;
 
+    @GetMapping("/{userId}")
+    public ResponseEntity<UserInfo> getUserInfo(@PathVariable Long userId) {
+        UserInfo user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을수 없습니다"));
+        return ResponseEntity.ok(user);
+    }
+
     // 프로필 사진 업로드
     @PostMapping("/{userId}/profile-image")
     public ResponseEntity<?> uploadProfileImage(
             @PathVariable Long userId,
             @RequestParam("file") MultipartFile file
     ) {
-        // 1) 유저 찾기
         UserInfo user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을수 없습니다"));
 
         try {
-            // 2) 파일 저장 (예: 프로젝트 루트의 uploads 폴더를 절대 경로로 지정)
             String originalFilename = file.getOriginalFilename();
-            // 현재 작업 디렉토리를 기준으로 uploads 폴더 절대 경로 생성
+
+            // 절대 경로(실제 파일 저장 위치)
             String uploadDirPath = System.getProperty("user.dir") + File.separator + "uploads";
             File uploadDir = new File(uploadDirPath);
             if (!uploadDir.exists()) {
-                uploadDir.mkdirs();  // 디렉토리 없으면 생성
+                uploadDir.mkdirs();
             }
-            String storePath = uploadDirPath + File.separator + userId + "_" + originalFilename;
-            File dest = new File(storePath);
-            file.transferTo(dest); // 파일 저장
 
-            // 3) DB에 경로 저장
-            user.setProfile_image(storePath);
+            // 실제 파일 저장
+            String absoluteFilePath = uploadDirPath + File.separator + userId + "_" + originalFilename;
+            file.transferTo(new File(absoluteFilePath));
+
+            // **DB**에는 "상대 경로"만 저장 → "/uploads/2_git.png" 형태
+            String relativePath = "/uploads/" + userId + "_" + originalFilename;
+            user.setProfile_image(relativePath);
             userRepository.save(user);
 
-            return ResponseEntity.ok("Profile image uploaded successfully!");
+            return ResponseEntity.ok(user);
+            // 업로드 후 user 객체(또는 profile_image만) 반환
         } catch (IOException e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("File upload failed");
+                    .body("파일 업로드 실패");
         }
     }
-}
+    @PatchMapping("/{userId}/profile")
+    public ResponseEntity<?> updateProfile(
+            @PathVariable Long userId,
+            @RequestBody Map<String, String> updates
+    ) {
+        UserInfo user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
+        // 본인만 수정 가능하도록 검증 로직(토큰에서 userId 비교) 등 추가 가능
+
+        // 필드가 존재하면 업데이트
+        if (updates.containsKey("introduction")) {
+            user.setIntroduction(updates.get("introduction"));
+        }
+        if (updates.containsKey("description")) {
+            user.setDescription(updates.get("description"));
+        }
+
+        userRepository.save(user);
+        return ResponseEntity.ok(user); // 갱신된 user 정보 반환
+    }
+}

@@ -31,14 +31,22 @@ public class TaskService {
 
     // userId를 추가로 받아 해당 유저의 Task를 생성
     public Task createTask(Task task) {
-        String userId = task.getUserId();
-        UserInfo user = userRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을수 없음 " + userId));
+        String userIdValue = task.getUserId();
+        UserInfo user = null;
+        // 먼저 숫자로 변환해서 기본키(id)로 조회 시도
+        try {
+            Long id = Long.parseLong(userIdValue);
+            user = userRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없음 (pk) " + userIdValue));
+        } catch (NumberFormatException ex) {
+            // 숫자가 아니면 로그인 ID(문자열)로 조회
+            user = userRepository.findByUserId(userIdValue)
+                    .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없음 (userId) " + userIdValue));
+        }
         task.setUser(user);
         task.setCreatedAt(LocalDate.now());
         return taskRepository.save(task);
     }
-
 
 
     // 특정 Task 수정

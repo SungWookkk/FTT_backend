@@ -41,6 +41,16 @@ public class UserInfo {
     @Column(name = "role", nullable = false, length = 20)
     private String role; // 사용자의 권한 (예: USER, ADMIN)
 
+    //프사
     @Column(name = "profile_image", length = 200)
     private String profile_image;
+
+    //한 줄 자기소개
+    @Column(name = "introduction", length = 200)
+    private String introduction;
+
+    //소개
+    @Column(name = "description", length = 500)
+    private String description;
+
 }

@@ -25,7 +25,7 @@ public class WebConfig {
             @Override
             public void addResourceHandlers(ResourceHandlerRegistry registry) {
                 registry.addResourceHandler("/**", "/uploads/**")
-                        .addResourceLocations("classpath:/static/", "file:uploads/");
+                        .addResourceLocations("classpath:/static/", "file:uploads/", "file:\" + System.getProperty(\"user.dir\") + \"/uploads/");
             }
         };
     }
