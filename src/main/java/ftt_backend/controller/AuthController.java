@@ -26,9 +26,10 @@ public class AuthController {
     // 회원가입
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody UserInfo userInfo) {
-        userService.saveUser(userInfo);
+        userService.createUser(userInfo);
         return ResponseEntity.ok("회원가입 성공!");
     }
+
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody UserInfo loginRequest) {
@@ -41,10 +42,11 @@ public class AuthController {
         return ResponseEntity.ok(Map.of(
                 "token", token,
                 "userName", user.getUsername(),
-                "userId", user.getUserId(),
+                "userId", user.getId(),
                 "userRole", user.getRole()
         ));
     }
+
     // 로그아웃 엔드포인트 추가
     @PostMapping("/logout")
     public ResponseEntity<?> logoutUser(@RequestBody Map<String, String> logoutRequest) {

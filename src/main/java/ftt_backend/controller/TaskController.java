@@ -52,8 +52,18 @@ public class TaskController {
         if (userId.isEmpty()) {
             return ResponseEntity.ok(List.of());
         }
-        UserInfo user = userRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        UserInfo user;
+        try {
+            // 먼저 userId를 숫자로 변환해 기본키(id)로 조회 시도
+            Long id = Long.parseLong(userId);
+            user = userRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다. (ID: " + userId + ")"));
+        } catch (NumberFormatException e) {
+            // 숫자 변환이 안되면 로그인 아이디(문자열)로 조회
+            user = userRepository.findByUserId(userId)
+                    .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다. (userId: " + userId + ")"));
+        }
+        // 로그인 ID(문자열)를 기준으로 작업을 조회
         List<Task> myTasks = taskRepository.findByUser_UserId(user.getUserId());
         return ResponseEntity.ok(myTasks);
     }
