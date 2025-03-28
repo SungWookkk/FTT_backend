@@ -1,8 +1,10 @@
 package ftt_backend.controller;
 
+import ftt_backend.model.Badge;
 import ftt_backend.model.Task;
 import ftt_backend.model.UserBadge;
 import ftt_backend.model.UserInfo;
+import ftt_backend.repository.BadgeRepository;
 import ftt_backend.repository.BadgeUserRepository;
 import ftt_backend.repository.TaskRepository;
 import ftt_backend.repository.UserRepository;
@@ -27,6 +29,14 @@ public class BadgeController {
 
     @Autowired
     private BadgeService badgeService;
+
+    @Autowired
+    private BadgeRepository badgeRepository;
+
+    @GetMapping("/badges")
+    public List<Badge> getAllBadges() {
+        return badgeRepository.findAll();
+    }
 
     @GetMapping("/user-badges/{userId}")
     public List<UserBadge> getUserBadges(@PathVariable Long userId) {
