@@ -23,7 +23,7 @@ public class DataLoader implements CommandLineRunner {
         user.setUserId("test");
         user.setUsername("test");
         user.setEmail("qw@12");
-        user.setPhoneNumber("1234");
+        user.setPhoneNumber("12341232132");
         user.setBirthDate(generateRandomBirthDate());
         user.setPassword("1234");
         user.setRole("USER");

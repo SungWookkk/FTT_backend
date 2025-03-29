@@ -24,6 +24,9 @@ public class TaskService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private BadgeService badgeService;
+
     // 모든 Task 목록 조회
     public List<Task> getAllTasks() {
         return taskRepository.findAll();
@@ -60,13 +63,23 @@ public class TaskService {
         existingTask.setDescription(updatedTask.getDescription());
         existingTask.setDueDate(updatedTask.getDueDate());
         existingTask.setPriority(updatedTask.getPriority());
+
+        // 상태가 DONE으로 변경되는지 확인
+        boolean wasNotDone = !"DONE".equals(existingTask.getStatus());
         existingTask.setStatus(updatedTask.getStatus());
+
         existingTask.setAssignee(updatedTask.getAssignee());
         existingTask.setMemo(updatedTask.getMemo());
         // user 관계(작성자)가 있다면 수정 로직 추가 가능
 
-        // 변경된 Task를 DB에 저장 후 반환
-        return taskRepository.save(existingTask);
+        Task saved = taskRepository.save(existingTask);
+
+        // 이번에 처음으로 DONE이 되었으면 배지 체크
+        if (wasNotDone && "DONE".equals(saved.getStatus())) {
+            badgeService.checkAndGrantBadgeIfEligible(saved.getUser());
+        }
+
+        return saved;
     }
     // 특정 Task 삭제
     public void deleteTask(Long id) {

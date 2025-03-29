@@ -20,7 +20,7 @@ public class Badge {
     @Column(name = "icon_path", length = 200)
     private String iconPath;
 
-    // 뱃지 달성 조건, 유형 등 확장 가능
-    // @Column(name = "condition")
-    // private String condition;
+    // 완료 횟수 조건
+    @Column(name = "completion_threshold")
+    private Integer completionThreshold;
 }
