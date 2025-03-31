@@ -2,13 +2,18 @@ package ftt_backend.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "guestbook_entry")
 @Data
 @NoArgsConstructor
+@Getter
+@Setter
 public class GuestbookEntry {
 
     @Id
@@ -40,4 +45,8 @@ public class GuestbookEntry {
     // 주인 댓글 작성 시간
     @Column(name = "host_comment_created_at")
     private LocalDateTime hostCommentCreatedAt;
+
+    // 비밀 글 여부
+    @Column(name = "secret", nullable = false)
+    private boolean secret = false;
 }
