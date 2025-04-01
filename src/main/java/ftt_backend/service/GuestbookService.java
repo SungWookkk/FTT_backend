@@ -48,23 +48,9 @@ public class GuestbookService {
     }
 
     // 방명록 목록 조회 (viewerId: 요청자)
-    public List<GuestbookEntry> getEntries(Long ownerId, Long viewerId) {
-        List<GuestbookEntry> entries = guestbookEntryRepository.findByOwner_IdOrderByCreatedAtDesc(ownerId);
-        // 각 항목에 대해 secret가 true이면, 요청자가 작성자 또는 프로필 소유자(=ownerId)인지 확인
-        for (GuestbookEntry entry : entries) {
-            if (entry.isSecret()) {
-                boolean isAllowed = false;
-                if (viewerId != null) {
-                    if (viewerId.equals(ownerId) || viewerId.equals(entry.getWriter().getId())) {
-                        isAllowed = true;
-                    }
-                }
-                if (!isAllowed) {
-                    entry.setContent("비밀 글입니다.");
-                }
-            }
-        }
-        return entries;
+    public List<GuestbookEntry> getEntries(Long ownerId) {
+        return guestbookEntryRepository.findByOwner_IdOrderByCreatedAtDesc(ownerId);
+        // viewerId 로직 제거
     }
 
     // 방명록 삭제 (요청자(requesterId)가 작성자(writer) 또는 프로필 소유자(owner)여야 삭제 가능)
@@ -81,11 +67,6 @@ public class GuestbookService {
         return entry;
     }
 
-
-    // 기존 getEntries 메서드 (viewerId 미제공 시)
-    public List<GuestbookEntry> getEntries(Long ownerId) {
-        return getEntries(ownerId, null);
-    }
 
     // 주인 댓글 작성 (1회)
     public GuestbookEntry addHostComment(Long entryId, String comment) {
