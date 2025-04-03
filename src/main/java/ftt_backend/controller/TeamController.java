@@ -27,4 +27,10 @@ public class TeamController {
     public List<Team> getTeamsByUserId(@PathVariable Long userId) {
         return teamService.findTeamsByUserId(userId);
     }
+    // 팀 상세 조회: GET /api/teams/{teamId}
+    @GetMapping("/{teamId}")
+    public ResponseEntity<Team> getTeamById(@PathVariable Long teamId) {
+        Team team = teamService.findTeamById(teamId);
+        return ResponseEntity.ok(team);
+    }
 }

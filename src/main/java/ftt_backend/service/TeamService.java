@@ -41,4 +41,9 @@ public class TeamService {
     public List<Team> findTeamsByUserId(Long userId) {
         return teamRepository.findByMembers_Id(userId);
     }
+    // 팀 상세 조회
+    public Team findTeamById(Long teamId) {
+        return teamRepository.findById(teamId)
+                .orElseThrow(() -> new RuntimeException("팀을 찾을 수 없습니다: " + teamId));
+    }
 }
