@@ -31,6 +31,10 @@ public class Team {
     @Column(name = "category", nullable = false, length = 50)
     private String category; // 팀의 카테고리 주제 (예: 코딩, 취업 등)
 
+    // 팀 생성한 사람의 userId를 저장하여 팀장 권한 부여
+    @Column(name = "team_leader", nullable = false, length = 50)
+    private String teamLeader;
+
     /**
      * 팀원들: UserInfo와 다대다 관계
      * team_members 조인 테이블을 통해 연결
