@@ -83,4 +83,11 @@ public class UserController {
         userRepository.save(user);
         return ResponseEntity.ok(user); // 갱신된 user 정보 반환
     }
+    // 새로 추가: username으로 사용자 조회
+    @GetMapping("/by-username/{username}")
+    public ResponseEntity<UserInfo> getUserByUsername(@PathVariable String username) {
+        UserInfo user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("해당 username을 가진 사용자를 찾을 수 없습니다."));
+        return ResponseEntity.ok(user);
+    }
 }

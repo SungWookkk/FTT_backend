@@ -56,11 +56,11 @@ public class BadgeController {
         try {
             id = Long.parseLong(request.getUserId());
         } catch (NumberFormatException e) {
-            throw new RuntimeException("유저 아이디 찾을수 없음 " + request.getUserId());
+            throw new RuntimeException("유저 아이디 찾을 수 없음 " + request.getUserId());
         }
         // 사용자 조회
         UserInfo user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을수 없음" + id));
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없음 " + id));
 
         // 현재 완료된 Task 개수 (status가 "DONE")
         int currentCount = taskRepository.countByUser_UserIdAndStatus(user.getUserId(), "DONE");
@@ -86,8 +86,30 @@ public class BadgeController {
         // BadgeService를 통해 뱃지 지급 로직 실행
         badgeService.checkAndGrantBadgeIfEligible(user);
 
-        // 업데이트된 사용자 뱃지 목록 반환
-        return badgeUserRepository.findByUserId(user.getId());
+        // 업데이트된 사용자 뱃지 목록 조회
+        List<UserBadge> updatedUserBadges = badgeUserRepository.findByUserId(user.getId());
+
+        // 지급된 뱃지 중 가장 높은 등급(혹은 최근 취득한 뱃지)로 정렬하여 선택
+        updatedUserBadges.sort((ub1, ub2) -> {
+            // 예시: completionThreshold 기준 내림차순 (높을수록 좋은 뱃지)
+            Integer t1 = ub1.getBadge().getCompletionThreshold();
+            Integer t2 = ub2.getBadge().getCompletionThreshold();
+            return t2.compareTo(t1);
+            // 만약 취득일자가 있다면 그 기준으로 정렬할 수도 있음.
+        });
+
+        // 모든 뱃지의 activeBadgeId를 초기화한 후,
+        // 정렬된 목록의 첫 번째 뱃지를 자동 활성화
+        for (UserBadge ub : updatedUserBadges) {
+            ub.setActiveBadgeId(null);
+        }
+        if (!updatedUserBadges.isEmpty()) {
+            UserBadge highestBadge = updatedUserBadges.get(0);
+            highestBadge.setActiveBadgeId(highestBadge.getBadge().getId());
+        }
+        badgeUserRepository.saveAll(updatedUserBadges);
+
+        return updatedUserBadges;
     }
 
     /**
@@ -124,7 +146,6 @@ public class BadgeController {
         // 7) 업데이트된 목록 반환
         return allUserBadges;
     }
-
     // 테스트용 DTO
     public static class TestUpdateRequest {
         private String userId;

@@ -53,4 +53,12 @@ public class UserInfo {
     @Column(name = "description", length = 500)
     private String description;
 
+    // 방명록의 사용자별 작성 권한
+    @Column(name = "guestbook_permission", length = 20)
+    private String guestbookPermission;
+    //ANYONE: 누구나 방명록 작성 가능
+    //
+    //TEAM_ONLY: 팀원(또는 친구)만 작성 가능
+    //
+    //NONE: 아무도 작성 불가
 }
