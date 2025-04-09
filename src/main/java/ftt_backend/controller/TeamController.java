@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/teams")
+@RequestMapping("/api/team")
 public class TeamController {
 
     @Autowired
@@ -27,7 +27,7 @@ public class TeamController {
     public List<Team> getTeamsByUserId(@PathVariable Long userId) {
         return teamService.findTeamsByUserId(userId);
     }
-    // 팀 상세 조회: GET /api/teams/{teamId}
+    // 팀 상세 조회
     @GetMapping("/{teamId}")
     public ResponseEntity<Team> getTeamById(@PathVariable Long teamId) {
         Team team = teamService.findTeamById(teamId);
