@@ -11,13 +11,13 @@ import org.springframework.web.bind.annotation.*;
  * 여기서는 Team 엔티티의 announcement 필드를 팀 상태 메시지로 활용
  */
 @RestController
-@RequestMapping("/api/teams/{teamId}/statusMessage")
+@RequestMapping("/api/team/{teamId}/statusMessage")
 public class TeamStatusController {
 
     @Autowired
     private TeamService teamService;
 
-    // 팀 상태 메시지 조회: GET /api/teams/{teamId}/statusMessage
+    // 팀 상태 메시지 조회
     @GetMapping
     public ResponseEntity<String> getStatusMessage(@PathVariable Long teamId) {
         Team team = teamService.findTeamById(teamId);
@@ -28,8 +28,8 @@ public class TeamStatusController {
         return ResponseEntity.ok(statusMessage);
     }
 
-    // 팀 상태 메시지 수정: PUT /api/teams/{teamId}/statusMessage
-    @PutMapping
+    // 팀 상태 메시지 수정
+    @PutMapping(consumes = {"application/json", "text/plain"})
     public ResponseEntity<Team> updateStatusMessage(@PathVariable Long teamId, @RequestBody String statusMessage) {
         Team team = teamService.findTeamById(teamId);
         team.setAnnouncement(statusMessage);
