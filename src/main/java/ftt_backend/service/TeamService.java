@@ -46,4 +46,8 @@ public class TeamService {
         return teamRepository.findById(teamId)
                 .orElseThrow(() -> new RuntimeException("팀을 찾을 수 없습니다: " + teamId));
     }
+    @Transactional
+    public Team updateTeam(Team team) {
+        return teamRepository.save(team);
+    }
 }
