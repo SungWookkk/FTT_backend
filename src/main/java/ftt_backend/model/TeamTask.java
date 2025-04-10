@@ -1,5 +1,6 @@
 package ftt_backend.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -67,5 +68,7 @@ public class TeamTask {
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "team_id")
+    @JsonBackReference  // 순환 참조 끊기: 팀 정보 직렬화에서 제외
     private Team team;
 }
+

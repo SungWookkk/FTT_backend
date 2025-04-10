@@ -1,10 +1,12 @@
 package ftt_backend.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -51,6 +53,8 @@ public class Team {
      * 팀의 할 일 (TodoList)
      * 팀 하나는 여러 개의 할 일을 가질 수 있음
      */
-    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TeamTask> tasks;
+
+    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference  // 순환 참조 끊기: team을 직렬화할 때 tasks를 포함하지만, tasks 내 team은 직렬화되지 않음.
+    private List<TeamTask> tasks = new ArrayList<>();
 }
