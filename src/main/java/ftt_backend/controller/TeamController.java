@@ -39,4 +39,9 @@ public class TeamController {
         Team team = teamService.findTeamById(teamId);
         return ResponseEntity.ok(team);
     }
+    // 전체 팀 목록 조회 엔드포인트
+    @GetMapping("/all")
+    public List<Team> getAllTeams() {
+        return teamService.findAllTeams();
+    }
 }
