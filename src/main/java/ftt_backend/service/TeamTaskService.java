@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -47,6 +48,17 @@ public class TeamTaskService {
         UserInfo user = userRepository.findByUsername(teamTask.getUser().getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found with username: " + teamTask.getUser().getUsername()));
         teamTask.setUser(user);
+
+        // (선택) 시작일과 오늘 비교해 상태 결정
+        LocalDate now = LocalDate.now();  // ex. 2025-04-13
+        LocalDate start = teamTask.getStartDate(); // ex. 2025-04-15
+        if (start != null && start.isAfter(now)) {
+            teamTask.setStatus("진행 예정");
+        } else {
+            // start가 오늘이거나 이미 지났으면 "진행중"
+            teamTask.setStatus("진행중");
+        }
+
 
         return teamTaskRepository.save(teamTask);
     }
