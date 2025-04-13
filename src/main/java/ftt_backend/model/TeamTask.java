@@ -70,5 +70,11 @@ public class TeamTask {
     @JoinColumn(name = "team_id")
     @JsonBackReference  // 순환 참조 끊기: 팀 정보 직렬화에서 제외
     private Team team;
+
+    // 작업을 생성한 사용자를 userInfo 엔티티로 참조
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_info_username", referencedColumnName = "username")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"}) // 직렬화 시 프록시 문제 방지
+    private UserInfo user;
 }
 

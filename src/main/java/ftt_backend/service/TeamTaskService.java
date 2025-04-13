@@ -2,8 +2,10 @@ package ftt_backend.service;
 
 import ftt_backend.model.Team;
 import ftt_backend.model.TeamTask;
+import ftt_backend.model.UserInfo;
 import ftt_backend.repository.TeamRepository;
 import ftt_backend.repository.TeamTaskRepository;
+import ftt_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +21,9 @@ public class TeamTaskService {
     @Autowired
     private TeamRepository teamRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
     // 팀에 속한 모든 작업 조회
     public List<TeamTask> getTasksByTeamId(Long teamId) {
         // 팀 존재 여부 확인 (없으면 예외 발생)
@@ -33,6 +38,16 @@ public class TeamTaskService {
         Team team = teamRepository.findById(teamId)
                 .orElseThrow(() -> new RuntimeException("Team not found with id: " + teamId));
         teamTask.setTeam(team);
+
+        // user 정보가 누락됐거나 username이 null이면 예외 처리
+        if (teamTask.getUser() == null || teamTask.getUser().getUsername() == null) {
+            throw new RuntimeException("User 정보가 누락되었습니다.");
+        }
+        // UserInfo 엔티티를 username으로 조회
+        UserInfo user = userRepository.findByUsername(teamTask.getUser().getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found with username: " + teamTask.getUser().getUsername()));
+        teamTask.setUser(user);
+
         return teamTaskRepository.save(teamTask);
     }
 }
