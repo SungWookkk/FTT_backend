@@ -62,4 +62,18 @@ public class TeamTaskService {
 
         return teamTaskRepository.save(teamTask);
     }
+    // 팀 작업 상태 업데이트 메서드
+    @Transactional
+    public TeamTask updateTaskStatus(Long teamId, Long taskId, String newStatus) {
+        TeamTask task = teamTaskRepository.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("팀 Task id를 찾을수 없음" + taskId));
+
+        // 해당 작업이 지정한 팀에 속하는지 확인 (필요 시)
+        if (!task.getTeam().getId().equals(teamId)) {
+            throw new RuntimeException("해당 작업은 이 팀에 속하지 않습니다.");
+        }
+
+        task.setStatus(newStatus);
+        return teamTaskRepository.save(task);
+    }
 }

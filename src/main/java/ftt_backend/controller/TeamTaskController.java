@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/team/{teamId}/tasks")
@@ -28,5 +29,20 @@ public class TeamTaskController {
     public ResponseEntity<TeamTask> createTeamTask(@PathVariable Long teamId, @RequestBody TeamTask teamTask) {
         TeamTask createdTask = teamTaskService.createTeamTask(teamId, teamTask);
         return new ResponseEntity<>(createdTask, HttpStatus.CREATED);
+    }
+    // 팀 작업 상태 업데이트 (PATCH 요청)
+    @PatchMapping("/{taskId}")
+    public ResponseEntity<TeamTask> updateTaskStatus(
+            @PathVariable Long teamId,
+            @PathVariable Long taskId,
+            @RequestBody Map<String, String> updates) {
+
+        String newStatus = updates.get("status");
+        if (newStatus == null) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        TeamTask updatedTask = teamTaskService.updateTaskStatus(teamId, taskId, newStatus);
+        return new ResponseEntity<>(updatedTask, HttpStatus.OK);
     }
 }
