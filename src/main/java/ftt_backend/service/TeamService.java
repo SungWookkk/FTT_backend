@@ -1,13 +1,16 @@
 package ftt_backend.service;
 
 import ftt_backend.model.Team;
+import ftt_backend.model.TeamChannel;
 import ftt_backend.model.UserInfo;
+import ftt_backend.repository.TeamChannelRepository;
 import ftt_backend.repository.TeamRepository;
 import ftt_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +22,9 @@ public class TeamService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private TeamChannelRepository teamChannelRepository;
 
     // 헤더에서 전달된 userId(팀 생성자 정보)를 사용하여 팀 생성
     @Transactional
@@ -41,8 +47,26 @@ public class TeamService {
             team.setStatus("Active");
         }
 
-        return teamRepository.save(team);
+        // 팀 저장
+        Team savedTeam = teamRepository.save(team);
+
+        // 기본 채널 생성 (팀 생성 시 자동 추가)
+        // 기본 채널 목록: "General", "공지사항", "자유 채널"
+        String[] defaultChannels = {"General", "공지사항", "자유 채널"};
+        for (String channelName : defaultChannels) {
+            TeamChannel channel = new TeamChannel();
+            channel.setChannelName(channelName);
+            channel.setDescription(""); // 채널 설명 (필요시 수정)
+            channel.setCreatedAt(LocalDateTime.now());
+            channel.setUpdatedAt(LocalDateTime.now());
+            channel.setTeam(savedTeam);
+            channel.setCreatedBy(leaderUser);
+            teamChannelRepository.save(channel);
+        }
+
+        return savedTeam;
     }
+
 
     // 특정 userId가 속한 팀 목록 조회
     public List<Team> findTeamsByUserId(Long userId) {
