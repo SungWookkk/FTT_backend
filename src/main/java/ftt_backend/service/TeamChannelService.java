@@ -30,7 +30,7 @@ public class TeamChannelService {
     public List<TeamChannel> getChannelsByTeamId(Long teamId) {
         // 팀 존재 여부 확인 (팀이 없으면 예외 발생)
         teamRepository.findById(teamId)
-                .orElseThrow(() -> new RuntimeException("Team not found with id: " + teamId));
+                .orElseThrow(() -> new RuntimeException("팀 ID를 찾을수없음 " + teamId));
         return teamChannelRepository.findByTeamId(teamId);
     }
 
@@ -39,27 +39,26 @@ public class TeamChannelService {
     public TeamChannel createTeamChannel(Long teamId, TeamChannel channel) {
         // 팀 존재 여부 확인
         Team team = teamRepository.findById(teamId)
-                .orElseThrow(() -> new RuntimeException("Team not found with id: " + teamId));
+                .orElseThrow(() -> new RuntimeException("팀 ID를 찾을수없음" + teamId));
         channel.setTeam(team);
         channel.setCreatedAt(LocalDateTime.now());
         channel.setUpdatedAt(LocalDateTime.now());
 
-        // 생성자 정보가 존재해야 합니다.
         if (channel.getCreatedBy() == null || channel.getCreatedBy().getId() == null) {
             throw new RuntimeException("CreatedBy 정보가 누락되었습니다.");
         }
         UserInfo createdBy = userRepository.findById(channel.getCreatedBy().getId())
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + channel.getCreatedBy().getId()));
+                .orElseThrow(() -> new RuntimeException("사용자 ID를 찾을수없음" + channel.getCreatedBy().getId()));
         channel.setCreatedBy(createdBy);
 
         return teamChannelRepository.save(channel);
     }
 
-    // 채널 수정 (부분 업데이트)
+    // 채널 수정
     @Transactional
     public TeamChannel updateTeamChannel(Long teamId, Long channelId, Map<String, Object> updates) {
         TeamChannel channel = teamChannelRepository.findById(channelId)
-                .orElseThrow(() -> new RuntimeException("Channel not found with id: " + channelId));
+                .orElseThrow(() -> new RuntimeException("채널 ID를 찾을수없음" + channelId));
         if (!channel.getTeam().getId().equals(teamId)) {
             throw new RuntimeException("해당 채널은 이 팀에 속하지 않습니다.");
         }
@@ -77,7 +76,7 @@ public class TeamChannelService {
     @Transactional
     public void deleteTeamChannel(Long teamId, Long channelId) {
         TeamChannel channel = teamChannelRepository.findById(channelId)
-                .orElseThrow(() -> new RuntimeException("Channel not found with id: " + channelId));
+                .orElseThrow(() -> new RuntimeException("채널 ID를 찾을수없음" + channelId));
         if (!channel.getTeam().getId().equals(teamId)) {
             throw new RuntimeException("해당 채널은 이 팀에 속하지 않습니다.");
         }
