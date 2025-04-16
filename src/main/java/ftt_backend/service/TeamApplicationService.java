@@ -27,15 +27,21 @@ public class TeamApplicationService {
     // 팀 신청 생성 (신청자의 ID는 헤더 등을 통해 전달받은 값 사용)
     @Transactional
     public TeamApplication createTeamApplication(Long teamId, Long applicantId, String reason, String goal) {
-        // 전달받은 teamId로 팀 객체를 조회
+        // 1) 팀 조회
         Team team = teamRepository.findById(teamId)
                 .orElseThrow(() -> new RuntimeException("팀을 찾을 수 없습니다: " + teamId));
 
-        // 신청자의 정보를 조회
+        // 2) 신청자 조회
         UserInfo applicant = userRepository.findById(applicantId)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다: " + applicantId));
 
-        // 새로운 TeamApplication 객체 생성 및 데이터 설정
+        // 3) 이미 가입한 사용자이면 예외
+        if (team.getMembers() != null && team.getMembers().contains(applicant)) {
+            // 여기서 예외 혹은 커스텀 메시지로 처리
+            throw new RuntimeException("이미 가입되어 있는 팀입니다!");
+        }
+
+        // 4) 새 신청 엔티티 생성
         TeamApplication application = new TeamApplication();
         application.setTeam(team);
         application.setApplicant(applicant);
@@ -44,6 +50,7 @@ public class TeamApplicationService {
         application.setStatus("PENDING");
         application.setAppliedAt(LocalDate.now());
 
+        // 5) DB 저장 후 반환
         return teamApplicationRepository.save(application);
     }
 

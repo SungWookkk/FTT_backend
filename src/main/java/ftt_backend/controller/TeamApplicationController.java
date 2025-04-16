@@ -18,8 +18,8 @@ public class TeamApplicationController {
 
     // 팀 신청 생성 API
     @PostMapping
-    public ResponseEntity<TeamApplication> createApplication(@RequestBody TeamApplication teamApplication,
-                                                             @RequestHeader("X-User-Id") Long userId) {
+    public ResponseEntity<?> createApplication(@RequestBody TeamApplication teamApplication,
+                                               @RequestHeader("X-User-Id") Long userId) {
         // 클라이언트에서 teamApplication 객체에 팀 정보가 포함되어 있다고 가정하고 팀 ID 추출
         if (teamApplication.getTeam() == null || teamApplication.getTeam().getId() == null) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -28,9 +28,14 @@ public class TeamApplicationController {
         String reason = teamApplication.getReason();
         String goal = teamApplication.getGoal();
 
-        // 서비스 메서드의 시그니처는 (Long teamId, Long applicantId, String reason, String goal)
-        TeamApplication createdApplication = teamApplicationService.createTeamApplication(teamId, userId, reason, goal);
-        return new ResponseEntity<>(createdApplication, HttpStatus.CREATED);
+        try {
+            // 서비스 메서드의 시그니처는 (Long teamId, Long applicantId, String reason, String goal)
+            TeamApplication createdApplication = teamApplicationService.createTeamApplication(teamId, userId, reason, goal);
+            return new ResponseEntity<>(createdApplication, HttpStatus.CREATED);
+        } catch (RuntimeException ex) {
+            // 예를 들어, 이미 팀에 가입된 경우 "이미 가입되어 있는 팀입니다!" 라는 메시지가 반환
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        }
     }
 
     // 특정 팀의 신청 목록 조회 API
