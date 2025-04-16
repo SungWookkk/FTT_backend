@@ -1,14 +1,14 @@
-// TeamApplication.java
 package ftt_backend.model;
 
 import jakarta.persistence.*;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "team_application")
+@Data
 @Getter
 @Setter
 public class TeamApplication {
@@ -17,32 +17,31 @@ public class TeamApplication {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 팀에 신청한 사용자 정보 (UserInfo와 ManyToOne 관계)
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private UserInfo applicant;
-
-    @Column(name = "applicant_username")
-    private String applicantUsername;  // 실제 UserInfo의 username 저장
-
-    // 신청한 팀 (Team과 ManyToOne 관계)
-    @ManyToOne
-    @JoinColumn(name = "team_id", nullable = false)
+    // 신청한 팀 정보
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "team_id")
     private Team team;
 
-    private String reason;    // 신청하는 이유
-    private String goal;      // 목표
+    // 신청한 사용자 (applicant)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "applicant_id", nullable = false)
+    private UserInfo applicant;
 
-    // 신청 상태 (예: PENDING, APPROVED, REJECTED)
+    // 신청 사유
+    @Column(name = "reason", columnDefinition = "TEXT")
+    private String reason;
+
+    // 목표
+    @Column(name = "goal", columnDefinition = "TEXT")
+    private String goal;
+
+    // 신청 상태: "PENDING", "APPROVED", "REJECTED"
+    @Column(name = "status", length = 20)
     private String status;
 
-    // 신청 일자, 업데이트 일자
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    // 신청 일자
+    @Column(name = "applied_at")
+    private LocalDate appliedAt;
 
-    //  기본 상태 및 생성 일자 설정
-    public TeamApplication() {
-        this.status = "PENDING";
-        this.createdAt = LocalDateTime.now();
-    }
+
 }
