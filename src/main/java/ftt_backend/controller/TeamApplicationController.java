@@ -58,4 +58,38 @@ public class TeamApplicationController {
         TeamApplication updated = teamApplicationService.rejectApplication(applicationId);
         return ResponseEntity.ok(updated);
     }
+    /** 멤버 추방 */
+    @DeleteMapping("/{teamId}/members/{userId}")
+    public ResponseEntity<?> kickMember(
+            @PathVariable Long teamId,
+            @PathVariable Long userId) {
+        teamApplicationService.removeMember(teamId, userId);
+        return ResponseEntity.noContent().build();
+    }
+
+    /** 멤버 등급 상승 */
+    @PatchMapping("/{teamId}/members/{userId}/promote")
+    public ResponseEntity<?> promoteMember(
+            @PathVariable Long teamId,
+            @PathVariable Long userId) {
+        teamApplicationService.promoteMember(teamId, userId);
+        return ResponseEntity.ok().build();
+    }
+
+    /** 팀 탈퇴 (현재 사용자) */
+    @DeleteMapping("/{teamId}/members/me")
+    public ResponseEntity<?> leaveTeam(
+            @RequestHeader("X-User-Id") Long userId,
+            @PathVariable Long teamId) {
+        teamApplicationService.leaveTeam(teamId, userId);
+        return ResponseEntity.noContent().build();
+    }
+
+    /** 팀 해체 */
+    @DeleteMapping("/{teamId}")
+    public ResponseEntity<?> disbandTeam(
+            @PathVariable Long teamId) {
+        teamApplicationService.disbandTeam(teamId);
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -85,4 +85,61 @@ public class TeamApplicationService {
         application.setStatus("REJECTED");
         return teamApplicationRepository.save(application);
     }
+    /**
+     * 멤버 추방
+     */
+    @Transactional
+    public void removeMember(Long teamId, Long userId) {
+        Team team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new RuntimeException("팀을 찾을 수 없습니다: " + teamId));
+        UserInfo user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다: " + userId));
+
+        if (!team.getMembers().remove(user)) {
+            throw new RuntimeException("해당 사용자가 팀 멤버가 아닙니다: " + userId);
+        }
+        teamRepository.save(team);
+    }
+
+    /**
+     * 멤버 등급 상승 (USER → ADMIN)
+     */
+    @Transactional
+    public void promoteMember(Long teamId, Long userId) {
+        Team team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new RuntimeException("팀을 찾을 수 없습니다: " + teamId));
+        UserInfo user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다: " + userId));
+
+        if (!team.getMembers().contains(user)) {
+            throw new RuntimeException("해당 사용자가 팀 멤버가 아닙니다: " + userId);
+        }
+
+        user.setRole("ADMIN");
+        userRepository.save(user);
+    }
+
+    /**
+     * 팀 탈퇴 (현재 사용자)
+     */
+    @Transactional
+    public void leaveTeam(Long teamId, Long userId) {
+        removeMember(teamId, userId);
+    }
+
+    /**
+     * 팀 해체
+     */
+    @Transactional
+    public void disbandTeam(Long teamId) {
+        if (!teamRepository.existsById(teamId)) {
+            throw new RuntimeException("해당 팀이 존재하지 않습니다: " + teamId);
+        }
+        teamRepository.deleteById(teamId);
+    }
+    public Long getTeamIdByApplication(Long applicationId) {
+        TeamApplication app = teamApplicationRepository.findById(applicationId)
+                .orElseThrow(() -> new RuntimeException("신청을 찾을 수 없습니다."));
+        return app.getTeam().getId();
+    }
 }
