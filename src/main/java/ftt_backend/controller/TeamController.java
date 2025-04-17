@@ -1,10 +1,13 @@
 package ftt_backend.controller;
 
 import ftt_backend.model.Team;
+import ftt_backend.model.UserInfo;
+import ftt_backend.repository.TeamRepository;
 import ftt_backend.service.TeamService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,6 +18,9 @@ public class TeamController {
 
     @Autowired
     private TeamService teamService;
+
+    @Autowired
+    private TeamRepository teamRepository;
 
     // 팀 생성 요청 처리 (헤더에서 팀 생성자의 아이디(X-User-Id) 를 받음)
     @PostMapping("/create")
@@ -43,5 +49,15 @@ public class TeamController {
     @GetMapping("/all")
     public List<Team> getAllTeams() {
         return teamService.findAllTeams();
+    }
+
+    // 팀원 목록 조회
+    @GetMapping("/{teamId}/members")
+    @Transactional(readOnly = true)
+    public List<UserInfo> getTeamMembers(@PathVariable Long teamId) {
+        Team team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new RuntimeException("팀을 찾을 수 없습니다: " + teamId));
+        // 이 시점에서 members 필드를 초기화하여 JSON 직렬화
+        return team.getMembers();
     }
 }
