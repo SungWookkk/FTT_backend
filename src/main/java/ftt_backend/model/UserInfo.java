@@ -9,7 +9,10 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "user_info")
+@Table(
+        name="user_info",
+        indexes = @Index(name="idx_user_info_username", columnList="username")
+)
 @Data
 @Getter
 @Setter

@@ -52,7 +52,7 @@ public class TeamController {
     }
 
     // 팀원 목록 조회
-    @GetMapping("/{teamId}/members")
+    @GetMapping("/{teamId}/member")
     @Transactional(readOnly = true)
     public List<UserInfo> getTeamMembers(@PathVariable Long teamId) {
         Team team = teamRepository.findById(teamId)
