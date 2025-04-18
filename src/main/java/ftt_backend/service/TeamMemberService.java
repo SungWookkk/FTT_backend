@@ -77,7 +77,7 @@ public class TeamMemberService {
     /**
      * 특정 팀의 모든 TeamMember 엔티티를 조회
      */
-    @Transactional  // ← readOnly 속성 제거!
+    @Transactional
     public List<TeamMember> listMembers(Long teamId) {
         Team team = teamRepo.findById(teamId)
                 .orElseThrow(() -> new RuntimeException("팀을 찾을 수 없습니다: " + teamId));

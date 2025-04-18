@@ -1,22 +1,14 @@
 package ftt_backend.controller;
 
-import ftt_backend.model.Team;
-import ftt_backend.model.TeamMember;
 import ftt_backend.model.TeamRole;
-import ftt_backend.model.UserInfo;
-import ftt_backend.repository.TeamMemberRepository;
-import ftt_backend.repository.TeamRepository;
 import ftt_backend.service.TeamMemberService;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
