@@ -26,6 +26,8 @@ jobs:
     # 3. Frontend 빌드
     - name: Build Frontend
       run: |
+        # V8 힙을 4 GB로 확장
+        export NODE_OPTIONS="--max_old_space_size=4096"
         cd ftt_frontend
         npm install
         npm run build
