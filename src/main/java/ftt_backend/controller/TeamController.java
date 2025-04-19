@@ -60,4 +60,17 @@ public class TeamController {
         // 이 시점에서 members 필드를 초기화하여 JSON 직렬화
         return team.getMembers();
     }
+
+    /**
+     * 현재 로그인된 사용자가 팀을 탈퇴
+     * 헤더에 X-User-Id 로 userId 전달을 가정
+     */
+    @PostMapping("/{teamId}/leave")
+    public ResponseEntity<Void> leaveTeam(
+            @PathVariable Long teamId,
+            @RequestHeader("X-User-Id") Long userId
+    ) {
+        teamService.leaveTeam(teamId, userId);
+        return ResponseEntity.noContent().build();
+    }
 }

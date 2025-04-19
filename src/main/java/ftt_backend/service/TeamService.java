@@ -88,4 +88,28 @@ public class TeamService {
     public List<Team> findAllTeams() {
         return teamRepository.findAll();
     }
+
+    /**
+     * 지정된 사용자를 팀에서 탈퇴
+     * @param teamId 팀 식별자
+     * @param userId 사용자 식별자
+     */
+    @Transactional
+    public void leaveTeam(Long teamId, Long userId) {
+        Team team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new RuntimeException("팀을 찾을 수 없습니다: " + teamId));
+
+        UserInfo user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다: " + userId));
+
+        boolean removed = team.getMembers().removeIf(u -> u.getId().equals(userId));
+        if (!removed) {
+            throw new RuntimeException("해당 사용자는 이 팀의 멤버가 아닙니다.");
+        }
+
+        // 팀 리더가 탈퇴하는 경우 추가 비즈니스 로직 필요할 수 있음
+        teamRepository.save(team);
+    }
 }
+
+
