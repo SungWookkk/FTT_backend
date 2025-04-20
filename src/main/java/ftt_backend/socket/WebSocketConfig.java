@@ -17,19 +17,20 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry
-                .addEndpoint("/ws") //엔드포인트로 클라이언트 연결을 받고 SockJS 폴백 지원
-                .setAllowedOriginPatterns("*")
+                .addEndpoint("/ws")
+                .setAllowedOriginPatterns("*")  // CORS 필요하다면 도메인 지정
                 .withSockJS();
     }
 
     /**
-     * 메시지 브로커 설정: application-prefix 와 브로커 목적지.
+     * 메시지 브로커를 설정
+     * 클라이언트는 /app/** 로 메시지를 보내고
+     * 서버는 /topic/** 을 통해 구독자에게 전달
      */
     @Override
-    public void configureMessageBroker(MessageBrokerRegistry registry) {
-        // 클라이언트로 보내는 토픽/큐
-        registry.enableSimpleBroker("/topic", "/queue"); // 브로커를 통해 메시지 전달
-        // 클라이언트가 메시지 보낼 때 앞에 붙이는 접두사
-        registry.setApplicationDestinationPrefixes("/app"); //접두사로 들어오는 메시지를 처리(컨트롤러 매핑)
+    public void configureMessageBroker(MessageBrokerRegistry config) {
+        config
+                .setApplicationDestinationPrefixes("/app")
+                .enableSimpleBroker("/topic");
     }
 }
