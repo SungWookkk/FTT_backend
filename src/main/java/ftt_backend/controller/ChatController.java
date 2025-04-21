@@ -12,15 +12,15 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
-@Controller
+@RestController
+@RequestMapping("/api/chat")
 public class ChatController {
 
     @Autowired
@@ -79,5 +79,18 @@ public class ChatController {
     @ResponseBody
     public List<TeamChannel> getChannels(@PathVariable Long teamId) {
         return teamChannelRepository.findByTeamId(teamId);
+    }
+
+    @GetMapping("/channels/{channelId}/messages")
+    public List<Map<String,?>> history(@PathVariable Long channelId) {  // ← 와일드 카드로 값 타입 상관없이 ? 로 바꿈
+        return chatMessageRepository.findByChannelIdOrderByTimestampAsc(channelId)
+                .stream()
+                .map(msg -> Map.of(
+                        "sender",  msg.getSender().getUsername(),
+                        "content", msg.getContent(),
+                        "timestamp", msg.getTimestamp().toString(),
+                        "channelId", msg.getChannelId()
+                ))
+                .collect(Collectors.toList());
     }
 }
