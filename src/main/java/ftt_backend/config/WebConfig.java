@@ -14,7 +14,7 @@ public class WebConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**")
+                registry.addMapping("/ws/**")
                         .allowedOrigins("http://localhost:3000")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
@@ -24,8 +24,21 @@ public class WebConfig {
 
             @Override
             public void addResourceHandlers(ResourceHandlerRegistry registry) {
-                registry.addResourceHandler("/**", "/uploads/**")
-                        .addResourceLocations("classpath:/static/", "file:uploads/", "file:\" + System.getProperty(\"user.dir\") + \"/uploads/");
+                // React build 결과물
+                registry
+                        .addResourceHandler("/static/**")
+                        .addResourceLocations("classpath:/static/static/");
+
+                // 업로드 파일
+                registry
+                        .addResourceHandler("/uploads/**")
+                        .addResourceLocations("file:uploads/",
+                                "file:" + System.getProperty("user.dir") + "/uploads/");
+                // **루트 요청**(/, /index.html)을 index.html 로 서빙하도록 명시
+                registry
+                        .addResourceHandler("/", "/index.html")
+                        .addResourceLocations("classpath:/static/index.html")
+                        .setCachePeriod(0);
             }
         };
     }

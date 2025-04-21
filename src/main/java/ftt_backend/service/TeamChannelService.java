@@ -6,6 +6,8 @@ import ftt_backend.model.UserInfo;
 import ftt_backend.repository.TeamChannelRepository;
 import ftt_backend.repository.TeamRepository;
 import ftt_backend.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,12 +28,33 @@ public class TeamChannelService {
     @Autowired
     private UserRepository userRepository;
 
-    // 팀에 속한 모든 채널 조회
+    private static final Logger logger = LoggerFactory.getLogger(TeamChannelService.class);
+
+    /**
+     * 팀에 속한 모든 채널 조회
+     *  - 팀이 없으면 RuntimeException 발생 (기존 흐름 유지)
+     *  - 있으면 TeamChannel 엔티티 리스트 반환
+     */
     public List<TeamChannel> getChannelsByTeamId(Long teamId) {
-        // 팀 존재 여부 확인 (팀이 없으면 예외 발생)
+        logger.debug("getChannelsByTeamId 호출: teamId={}", teamId);
+
+        // 1) 팀 존재 여부 확인
         teamRepository.findById(teamId)
-                .orElseThrow(() -> new RuntimeException("팀 ID를 찾을수없음 " + teamId));
-        return teamChannelRepository.findByTeamId(teamId);
+                .orElseThrow(() -> {
+                    logger.error("팀을 찾을 수 없습니다: teamId={}", teamId);
+                    return new RuntimeException("팀 ID를 찾을수없음 " + teamId);
+                });
+
+        // 2) 채널 조회
+        List<TeamChannel> channels = teamChannelRepository.findByTeamId(teamId);
+
+        // 3) 디버깅용 채널 정보 로깅
+        logger.debug("조회된 채널 개수: {} for teamId={}", channels.size(), teamId);
+        for (TeamChannel ch : channels) {
+            logger.debug("  ↳ Channel[id={}, name={}]", ch.getId(), ch.getChannelName());
+        }
+
+        return channels;
     }
 
     // 채널 생성

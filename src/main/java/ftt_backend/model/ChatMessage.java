@@ -21,4 +21,8 @@ public class ChatMessage {
 
     @Column(nullable = false)
     private LocalDateTime timestamp;
+
+    // 4/21 채널 ID 필드 추가
+    @Column(name = "channel_id")
+    private Long channelId;
 }

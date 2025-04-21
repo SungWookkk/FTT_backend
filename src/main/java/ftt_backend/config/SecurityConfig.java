@@ -6,7 +6,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,6 +15,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @EnableWebSecurity
@@ -30,22 +31,27 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager authenticationManager) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // CSRF 보호 비활성화
+                .csrf(csrf -> csrf.disable())
+                .cors(withDefaults())
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/ws/**").permitAll()
+                        .requestMatchers("/topic/**").permitAll()
+                        .requestMatchers("/app/**").permitAll()
+                        // 기존 허용 경로들
                         .requestMatchers(
-                                "/",              // 루트 경로
-                                "/signup",        // 회원가입
-                                "/login",         // 로그인
-                                "/dashboard",     // 대시보드
-                                "/favicon.ico",   // 파비콘
-                                "/manifest.json", // React Manifest
-                                "/logo192.png",   // React 로고
-                                "/static/**",     // React 정적 리소스
-                                "/api/auth/**",   // 인증 API
-                                "/**",             // 모든 경로 허용 (React Router 지원)
+                                "/",
+                                "/signup",
+                                "/login",
+                                "/dashboard",
+                                "/favicon.ico",
+                                "/manifest.json",
+                                "/logo192.png",
+                                "/static/**",
+                                "/api/auth/**",
                                 "/api/tasks/**"
                         ).permitAll()
-                        .anyRequest().authenticated() // 나머지는 인증 필요
+                        .requestMatchers("/**").permitAll()
+                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(authenticationManager, jwtUtils),
                         UsernamePasswordAuthenticationFilter.class) // JWT 필터 추가
@@ -72,14 +78,5 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
         return http.getSharedObject(AuthenticationManagerBuilder.class).build();
-    }
-    /**
-     * WebSecurity (FilterChainProxy 이전 단계) 에서 /ws/** 경로를 완전히 무시하도록 설정.
-     */
-    @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return web -> web
-                .ignoring()
-                .requestMatchers("/ws/**");
     }
 }
