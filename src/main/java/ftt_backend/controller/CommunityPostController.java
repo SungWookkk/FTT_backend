@@ -1,0 +1,67 @@
+package ftt_backend.controller;
+
+import ftt_backend.model.CommunityPost;
+import ftt_backend.service.CommunityPostService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.net.URI;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/community/posts")
+public class CommunityPostController {
+
+    @Autowired
+    private CommunityPostService postService;
+
+    /** 전체 게시글 조회 */
+    @GetMapping
+    public ResponseEntity<List<CommunityPost>> listPosts() {
+        return ResponseEntity.ok(postService.getAllPosts());
+    }
+
+    /** 단일 게시글 조회 (조회수 1 증가) */
+    @GetMapping("/{id}")
+    public ResponseEntity<CommunityPost> getPost(@PathVariable Long id) {
+        return postService.getPostById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * 새 게시글 생성
+     * - 요청 헤더에 X-User-Id: 작성자 userId
+     * - 요청 바디에 CommunityPost(JSON)
+     */
+    @PostMapping
+    public ResponseEntity<CommunityPost> createPost(
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestBody CommunityPost post
+    ) {
+        CommunityPost created = postService.createPost(post, userId);
+        return ResponseEntity
+                .created(URI.create("/api/community/posts/" + created.getId()))
+                .body(created);
+    }
+
+    /** 게시글 수정 */
+    @PutMapping("/{id}")
+    public ResponseEntity<CommunityPost> updatePost(
+            @PathVariable Long id,
+            @RequestBody CommunityPost post
+    ) {
+        CommunityPost updated = postService.updatePost(id, post);
+        return ResponseEntity.ok(updated);
+    }
+
+    /** 게시글 삭제 */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePost(@PathVariable Long id) {
+        postService.deletePost(id);
+        return ResponseEntity.noContent().build();
+    }
+
+
+}
