@@ -1,4 +1,3 @@
-// ftt_backend.controller.CommentController.java
 package ftt_backend.controller;
 
 import ftt_backend.model.Comment;
@@ -9,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/community/posts/{postId}/comments")
@@ -16,28 +16,33 @@ public class CommentController {
     @Autowired
     private CommentService commentService;
 
-    /** 댓글 목록 조회 */
+    /**
+     * 1) 댓글 트리 전체 조회
+     *    - 최상위 댓글(parent == null)과, 그 하위 replies 필드를 함께 리턴
+     */
     @GetMapping
     public ResponseEntity<List<Comment>> listComments(@PathVariable Long postId) {
-        List<Comment> comments = commentService.getCommentsByPostId(postId);
-        return ResponseEntity.ok(comments);
+        List<Comment> tree = commentService.getCommentsTree(postId);
+        return ResponseEntity.ok(tree);
     }
 
     /**
-     * 댓글 작성
-     * - RequestBody로 받은 Comment 인스턴스에서는 `content`만 사용
+     * 2) 댓글 / 대댓글 작성
+     *
+     * @param postId   게시글 ID
+     * @param authorId X-User-Id 헤더로 전달된 작성자 ID
+     * @param parentId (선택) parentId 파라미터를 주면 대댓글, 없으면 최상위 댓글
      */
     @PostMapping
     public ResponseEntity<Comment> createComment(
             @PathVariable Long postId,
             @RequestHeader("X-User-Id") Long authorId,
-            @RequestBody Comment incoming
+            @RequestParam(required = false) Long parentId,
+            @RequestBody Map<String, String> body
     ) {
-        Comment created = commentService.createComment(
-                postId,
-                authorId,
-                incoming.getContent()  // entity의 content 필드만 활용
-        );
+        String content = body.get("content");
+        Comment created = commentService.addComment(postId, authorId, content, parentId);
+        // 응답에는 트리 구조보다는 작성된 단일 Comment 만 보내도 충분합니다.
         return ResponseEntity
                 .created(URI.create("/api/community/posts/" + postId + "/comments/" + created.getId()))
                 .body(created);

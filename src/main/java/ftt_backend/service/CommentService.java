@@ -45,4 +45,38 @@ public class CommentService {
 
         return commentRepository.save(comment);
     }
+
+
+
+    /** 트리 형태로 댓글 + 대댓글 전체 조회 */
+    @Transactional(readOnly = true)
+    public List<Comment> getCommentsTree(Long postId) {
+        return commentRepository.findRootsWithReplies(postId);
+    }
+
+    /**
+     * 댓글/대댓글 생성
+     *
+     * @param postId   게시글 ID
+     * @param authorId 작성자 ID
+     * @param content  댓글 본문
+     * @param parentId 최상위(null) 또는 상위 댓글 ID
+     */
+    @Transactional
+    public Comment addComment(Long postId, Long authorId, String content, Long parentId) {
+        CommunityPost post = communityPostRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("게시글이 없습니다: " + postId));
+
+        Comment c = new Comment();
+        c.setPost(post);
+        c.setAuthorId(authorId);
+        c.setContent(content);
+
+        if (parentId != null) {
+            Comment parent = commentRepository.findById(parentId)
+                    .orElseThrow(() -> new RuntimeException("상위 댓글이 없습니다: " + parentId));
+            c.setParent(parent);
+        }
+        return commentRepository.save(c);
+    }
 }
