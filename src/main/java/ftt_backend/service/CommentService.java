@@ -1,10 +1,10 @@
-// ftt_backend.service.CommentService.java
 package ftt_backend.service;
 
 import ftt_backend.model.Comment;
 import ftt_backend.model.CommunityPost;
 import ftt_backend.repository.CommentRepository;
 import ftt_backend.repository.CommunityPostRepository;
+import ftt_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +18,10 @@ public class CommentService {
 
     @Autowired
     private CommunityPostRepository communityPostRepository;
+
+    // UserRepository 주입
+    @Autowired
+    private UserRepository userRepository;
 
     /**
      * 특정 게시글에 달린 댓글 조회
@@ -51,7 +55,19 @@ public class CommentService {
     /** 트리 형태로 댓글 + 대댓글 전체 조회 */
     @Transactional(readOnly = true)
     public List<Comment> getCommentsTree(Long postId) {
-        return commentRepository.findRootsWithReplies(postId);
+        List<Comment> roots = commentRepository.findRootsWithReplies(postId);
+        roots.forEach(this::populateCommentAuthorInfo);
+        return roots;
+    }
+    /** 재귀적으로 댓글과 대댓글에 사용자명·이미지 채우기 */
+    private void populateCommentAuthorInfo(Comment c) {
+        userRepository.findById(c.getAuthorId()).ifPresent(u -> {
+            c.setAuthorName(u.getUsername());
+            c.setAuthorProfileImage(u.getProfile_image());
+        });
+        if (c.getReplies() != null) {
+            c.getReplies().forEach(this::populateCommentAuthorInfo);
+        }
     }
 
     /**

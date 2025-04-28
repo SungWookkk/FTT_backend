@@ -72,4 +72,11 @@ public class Comment {
     protected void onUpdate() { // 추가
         this.updatedAt = LocalDateTime.now();
     }
+
+    // DB 컬럼이 아닌 필드
+    @Transient
+    private String authorName;
+
+    @Transient
+    private String authorProfileImage;
 }

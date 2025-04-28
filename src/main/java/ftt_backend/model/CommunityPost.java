@@ -72,4 +72,11 @@ public class CommunityPost {
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
+
+    // 아래 두 필드는 DB 컬럼이 아니므로 @Transient
+    @Transient
+    private String authorName;
+
+    @Transient
+    private String authorProfileImage;
 }

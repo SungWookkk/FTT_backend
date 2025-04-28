@@ -21,9 +21,13 @@ public class CommunityPostService {
     private UserRepository userRepository;
 
     /** 전체 게시글 조회 */
+    @Transactional(readOnly = true)
     public List<CommunityPost> getAllPosts() {
-        return postRepository.findAll();
+        List<CommunityPost> posts = postRepository.findAll();
+        posts.forEach(this::populateAuthorInfo);
+        return posts;
     }
+
 
     /** 단일 게시글 조회 (조회수 증가 포함) */
     @Transactional
@@ -32,10 +36,17 @@ public class CommunityPostService {
         opt.ifPresent(post -> {
             post.setViewsCount(post.getViewsCount() + 1);
             postRepository.save(post);
+            populateAuthorInfo(post);
         });
         return opt;
     }
-
+    /** authorName, authorProfileImage채움*/
+    private void populateAuthorInfo(CommunityPost post) {
+        userRepository.findById(post.getAuthorId()).ifPresent(user -> {
+            post.setAuthorName(user.getUsername());
+            post.setAuthorProfileImage(user.getProfile_image());
+        });
+    }
     /** 새 게시글 생성 (헤더 X-User-Id 로 전달된 userId 로 작성자 설정) */
     @Transactional
     public CommunityPost createPost(CommunityPost post, Long authorId) {
