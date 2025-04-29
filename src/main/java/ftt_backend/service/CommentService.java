@@ -2,6 +2,7 @@ package ftt_backend.service;
 
 import ftt_backend.model.Comment;
 import ftt_backend.model.CommunityPost;
+import ftt_backend.repository.BadgeUserRepository;
 import ftt_backend.repository.CommentRepository;
 import ftt_backend.repository.CommunityPostRepository;
 import ftt_backend.repository.UserRepository;
@@ -23,6 +24,8 @@ public class CommentService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private BadgeUserRepository badgeUserRepository;
     /**
      * 특정 게시글에 달린 댓글 조회
      */
@@ -64,6 +67,9 @@ public class CommentService {
         userRepository.findById(c.getAuthorId()).ifPresent(u -> {
             c.setAuthorName(u.getUsername());
             c.setAuthorProfileImage(u.getProfile_image());
+            // 활성 뱃지 조회해서 URL 설정
+            badgeUserRepository.findActiveByUserId(u.getId())
+                    .ifPresent(ub -> c.setAuthorBadgeUrl( ub.getBadge().getIconPath() ));
         });
         if (c.getReplies() != null) {
             c.getReplies().forEach(this::populateCommentAuthorInfo);
@@ -95,4 +101,5 @@ public class CommentService {
         }
         return commentRepository.save(c);
     }
+
 }

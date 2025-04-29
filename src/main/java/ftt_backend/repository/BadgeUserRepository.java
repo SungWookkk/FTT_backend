@@ -21,4 +21,5 @@ public interface BadgeUserRepository extends JpaRepository<UserBadge, Long> {
     @Query("SELECT ub FROM UserBadge ub WHERE ub.user.id = :userId AND ub.activeBadgeId IS NOT NULL")
     Optional<UserBadge> findActiveByUserId(Long userId);
 
+
 }

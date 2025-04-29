@@ -60,6 +60,9 @@ public class Comment {
     @JsonManagedReference       // replies 직렬화 허용
     private List<Comment> replies = new ArrayList<>();
 
+    @Transient
+    private String authorBadgeUrl;
+
     // ────────────────────────────────
 
     @PrePersist
