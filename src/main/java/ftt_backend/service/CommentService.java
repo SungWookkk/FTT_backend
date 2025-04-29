@@ -99,7 +99,13 @@ public class CommentService {
                     .orElseThrow(() -> new RuntimeException("상위 댓글이 없습니다: " + parentId));
             c.setParent(parent);
         }
-        return commentRepository.save(c);
-    }
 
+        Comment saved = commentRepository.save(c);
+
+        // **여기서** posts.commentsCount 를 1 증가시켜 DB에도 반영
+        post.setCommentsCount(post.getCommentsCount() + 1);
+        communityPostRepository.save(post);
+
+        return saved;
+    }
 }
