@@ -25,8 +25,10 @@ public class CommunityPostService {
     private BadgeUserRepository badgeUserRepository;
     /** 전체 게시글 조회 */
     @Transactional(readOnly = true)
-    public List<CommunityPost> getAllPosts() {
-        List<CommunityPost> posts = postRepository.findAll();
+    public List<CommunityPost> getAllPosts(String category) {
+        List<CommunityPost> posts = (category == null || category.equals("전체"))
+                ? postRepository.findAll()
+                : postRepository.findByCategory(category);
         posts.forEach(this::populateAuthorInfo);
         return posts;
     }

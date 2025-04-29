@@ -22,8 +22,11 @@ public class CommunityPostController {
     private LikeService likeService;
     /** 전체 게시글 조회 */
     @GetMapping
-    public ResponseEntity<List<CommunityPost>> listPosts() {
-        return ResponseEntity.ok(postService.getAllPosts());
+    public ResponseEntity<List<CommunityPost>> listPosts(
+            @RequestParam(required = false) String category
+    ) {
+        List<CommunityPost> all = postService.getAllPosts(category);
+        return ResponseEntity.ok(all);
     }
 
     /** 단일 게시글 조회 (조회수 1 증가) */

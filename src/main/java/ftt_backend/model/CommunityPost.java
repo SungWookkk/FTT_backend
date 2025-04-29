@@ -62,6 +62,10 @@ public class CommunityPost {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    /** 카테고리 (예: "공부", "운동", "코딩" 등) */
+    @Column(name = "category", length = 50, nullable = false)
+    private String category;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
