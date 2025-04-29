@@ -2,6 +2,7 @@ package ftt_backend.service;
 
 import ftt_backend.model.CommunityPost;
 import ftt_backend.model.UserInfo;
+import ftt_backend.repository.BadgeUserRepository;
 import ftt_backend.repository.CommunityPostRepository;
 import ftt_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,8 @@ public class CommunityPostService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private BadgeUserRepository badgeUserRepository;
     /** 전체 게시글 조회 */
     @Transactional(readOnly = true)
     public List<CommunityPost> getAllPosts() {
@@ -45,6 +48,12 @@ public class CommunityPostService {
         userRepository.findById(post.getAuthorId()).ifPresent(user -> {
             post.setAuthorName(user.getUsername());
             post.setAuthorProfileImage(user.getProfile_image());
+            // 여기서 UserBadgeRepository를 통해 활성 뱃지를 가져와서
+            badgeUserRepository.findActiveByUserId(user.getId())
+                    .ifPresent(ub -> {
+                        // Badge.iconPath를 CommunityPost.authorBadgeImageUrl에 세팅
+                        post.setAuthorBadgeImageUrl(ub.getBadge().getIconPath());
+                    });
         });
     }
     /** 새 게시글 생성 (헤더 X-User-Id 로 전달된 userId 로 작성자 설정) */

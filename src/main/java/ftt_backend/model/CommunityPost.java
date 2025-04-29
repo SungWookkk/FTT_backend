@@ -79,4 +79,7 @@ public class CommunityPost {
 
     @Transient
     private String authorProfileImage;
+
+    @Transient
+    private String authorBadgeImageUrl;
 }
