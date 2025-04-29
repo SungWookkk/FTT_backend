@@ -2,12 +2,14 @@ package ftt_backend.controller;
 
 import ftt_backend.model.CommunityPost;
 import ftt_backend.service.CommunityPostService;
+import ftt_backend.service.LikeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/community/posts")
@@ -16,6 +18,8 @@ public class CommunityPostController {
     @Autowired
     private CommunityPostService postService;
 
+    @Autowired
+    private LikeService likeService;
     /** 전체 게시글 조회 */
     @GetMapping
     public ResponseEntity<List<CommunityPost>> listPosts() {
@@ -62,6 +66,17 @@ public class CommunityPostController {
         postService.deletePost(id);
         return ResponseEntity.noContent().build();
     }
-
+    /** 좋아요 토글 */
+    @PostMapping("/{id}/like")
+    public ResponseEntity<?> toggleLike(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long userId
+    ) {
+        LikeService.ToggleResult result = likeService.toggleLike(id, userId);
+        return ResponseEntity.ok(Map.of(
+                "likesCount", result.likesCount,
+                "liked", result.liked
+        ));
+    }
 
 }
