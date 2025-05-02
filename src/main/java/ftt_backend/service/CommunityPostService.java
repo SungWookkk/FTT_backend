@@ -89,4 +89,11 @@ public class CommunityPostService {
         // post.setStatus("DELETED"); postRepository.save(post);
         postRepository.deleteById(id);
     }
+    @Transactional(readOnly = true)
+    public List<CommunityPost> getPostsByAuthor(Long authorId) {
+        List<CommunityPost> posts = postRepository.findByAuthorId(authorId);
+        posts.forEach(this::populateAuthorInfo);
+        return posts;
+    }
+
 }

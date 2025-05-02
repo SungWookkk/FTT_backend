@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class LikeService {
     @Autowired private PostLikeRepository likeRepo;
@@ -46,5 +48,9 @@ public class LikeService {
             this.likesCount = likesCount;
             this.liked = liked;
         }
+    }
+    @Transactional(readOnly = true)
+    public List<CommunityPost> getLikedPostsByUser(Long userId) {
+        return likeRepo.findLikedPostsByUserId(userId);
     }
 }

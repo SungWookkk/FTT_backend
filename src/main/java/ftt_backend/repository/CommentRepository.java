@@ -12,4 +12,6 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     // 게시글별 최상위 댓글만 가져오기 (자식은 fetch join 으로 같이)
     @Query("SELECT c FROM Comment c LEFT JOIN FETCH c.replies WHERE c.post.id = :postId AND c.parent IS NULL ORDER BY c.createdAt ASC")
     List<Comment> findRootsWithReplies(Long postId);
+    // 내가 쓴 댓글 조회 (최신순)
+    List<Comment> findByAuthorIdOrderByCreatedAtDesc(Long authorId);
 }

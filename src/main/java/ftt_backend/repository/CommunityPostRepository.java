@@ -9,6 +9,7 @@ import java.util.List;
 @Repository
 public interface CommunityPostRepository extends JpaRepository<CommunityPost, Long> {
     List<CommunityPost> findByCategory(String category);
+    List<CommunityPost> findByAuthorId(Long authorId);
 
 }
 

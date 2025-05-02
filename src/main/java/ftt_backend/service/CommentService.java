@@ -108,4 +108,10 @@ public class CommentService {
 
         return saved;
     }
+    @Transactional(readOnly = true)
+    public List<Comment> getCommentsByAuthor(Long authorId) {
+        List<Comment> list = commentRepository.findByAuthorIdOrderByCreatedAtDesc(authorId);
+        list.forEach(this::populateCommentAuthorInfo);
+        return list;
+    }
 }
