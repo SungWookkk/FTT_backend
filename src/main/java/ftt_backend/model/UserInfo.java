@@ -64,4 +64,9 @@ public class UserInfo {
     //TEAM_ONLY: 팀원(또는 친구)만 작성 가능
     //
     //NONE: 아무도 작성 불가
+
+    /* sms 알림 수신 동의*/
+    @Column(name = "sms_opt_in", nullable = false)
+    private Boolean smsOptIn = false;
+
 }

@@ -79,6 +79,10 @@ public class UserController {
         if (updates.containsKey("description")) {
             user.setDescription(updates.get("description"));
         }
+        if (updates.containsKey("smsOptIn")) {
+            user.setSmsOptIn(Boolean.parseBoolean(updates.get("smsOptIn")));
+        }
+
 
         userRepository.save(user);
         return ResponseEntity.ok(user); // 갱신된 user 정보 반환
