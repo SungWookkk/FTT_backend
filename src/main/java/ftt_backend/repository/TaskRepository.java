@@ -23,13 +23,8 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
      * 오늘 자정부터 내일 자정, 혹은 현재 시각부터 2시간 후 사이에 due_date가 속한 Task를 모두 조회
      */
     @Query("""
-      SELECT t
-        FROM Task t
-       WHERE t.dueDate BETWEEN :today AND :tomorrow
-          OR t.dueDate = :today
+        SELECT t FROM Task t
+         WHERE t.dueDate BETWEEN :today AND :tomorrow
     """)
-    List<Task> findImminentTasks(
-            @Param("today") LocalDate today,
-            @Param("tomorrow") LocalDate tomorrow
-    );
+    List<Task> findImminentTasks(LocalDate today, LocalDate tomorrow);
 }
