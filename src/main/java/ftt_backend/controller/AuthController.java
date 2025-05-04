@@ -6,6 +6,8 @@ package ftt_backend.controller;
 import ftt_backend.model.UserInfo;
 import ftt_backend.repository.UserRepository;
 import ftt_backend.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +25,7 @@ public class AuthController {
     @Autowired
     private UserRepository userRepository;
 
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
     // 회원가입
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody UserInfo userInfo) {
@@ -37,6 +40,9 @@ public class AuthController {
         if (token == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid credentials");
         }
+
+        log.info("Authorization: Bearer {}", token);
+
         // 여기서 user 정보도 함께 반환
         UserInfo user = userService.findByUserId(loginRequest.getUserId());
         return ResponseEntity.ok(Map.of(

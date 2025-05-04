@@ -2,9 +2,10 @@ package ftt_backend.config.kafka;
 
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.http.TwilioRestClient;
-import com.twilio.type.PhoneNumber;
 import ftt_backend.config.batch.dto.ReminderMessage;
-import org.springframework.beans.factory.annotation.Value;
+import ftt_backend.repository.UserRepository;
+import ftt_backend.model.UserInfo;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -13,31 +14,37 @@ public class SmsNotificationListener {
 
     private final TwilioRestClient twilioClient;
     private final String fromPhone;
+    @Autowired
+    private UserRepository userRepo;
 
     public SmsNotificationListener(
             TwilioRestClient twilioClient,
-            @Value("${twilio.from-phone}") String fromPhone
+            @Value("${twilio.from-phone}") String fromPhone,
+            UserRepository userRepo
     ) {
         this.twilioClient = twilioClient;
         this.fromPhone    = fromPhone;
+        this.userRepo     = userRepo;
     }
 
     @KafkaListener(topics = "task.deadline.sms", groupId = "todo-reminder")
     public void onReminderMessage(ReminderMessage msg) {
-        // ReminderMessage.phoneNumber 필드를 가져옵니다.
-        String toPhone = msg.getPhoneNumber();
-
-        String body = String.format(
-                "할 일 #%d \"%s\" 의 마감일이 %s 입니다. 확인하세요!",
-                msg.getTaskId(),
-                msg.getTaskTitle(),
-                msg.getDueDate()
-        );
-
-        Message.creator(
-                new PhoneNumber(toPhone),   // 수신자 번호
-                new PhoneNumber(fromPhone), // 발신자 번호
-                body
-        ).create(twilioClient);
+        // 1) DB 에 사용자 정보 다시 조회 (phoneNumber 로 lookup)
+        userRepo.findByPhoneNumber(msg.getPhoneNumber())
+                .filter(UserInfo::getSmsOptIn)         // 2) SMS 동의 여부 확인
+                .ifPresent(user -> {
+                    // 3) 실제 SMS 전송
+                    String body = String.format(
+                            "할 일 #%d \"%s\"의 마감일이 %s 입니다. 확인하세요!",
+                            msg.getTaskId(),
+                            msg.getTaskTitle(),
+                            msg.getDueDate()
+                    );
+                    Message.creator(
+                            new com.twilio.type.PhoneNumber(msg.getPhoneNumber()),
+                            new com.twilio.type.PhoneNumber(fromPhone),
+                            body
+                    ).create(twilioClient);
+                });
     }
 }

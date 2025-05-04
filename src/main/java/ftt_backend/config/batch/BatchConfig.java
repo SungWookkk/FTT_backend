@@ -87,7 +87,7 @@ public class BatchConfig {
         return new RepositoryItemReaderBuilder<Task>()
                 .name("taskReader")
                 .repository(taskRepository)
-                .methodName("findImminentTasks")
+                .methodName("findImminentTasks")                   // 여기가 리포지토리 메서드 호출!
                 .arguments(List.of(today, tomorrow))
                 .pageSize(100)
                 .sorts(Map.of("dueDate", Sort.Direction.ASC))
