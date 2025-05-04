@@ -14,4 +14,5 @@ public interface UserRepository extends JpaRepository<UserInfo, Long> {
     // Optional<UserInfo>를 반환하여, 결과가 없을 경우 빈 값을 처리할 수 있게함
     Optional<UserInfo> findByUserId(String userId);
     Optional<UserInfo> findByUsername(String userName);
+    Optional<UserInfo> findByPhoneNumber(String phoneNumber);
 }
