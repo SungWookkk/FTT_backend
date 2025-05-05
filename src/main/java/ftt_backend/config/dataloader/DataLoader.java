@@ -42,7 +42,6 @@ public class DataLoader implements CommandLineRunner {
         user.setUsername("test");
         user.setEmail("test@example.com");
         // 반드시 E.164 형식으로
-        user.setPhoneNumber("+821071231906");
         user.setBirthDate("1990-01-01");
         user.setPassword("1234");
         user.setRole("USER");
