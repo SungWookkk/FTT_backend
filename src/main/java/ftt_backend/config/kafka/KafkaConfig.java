@@ -8,9 +8,9 @@ import org.springframework.kafka.config.TopicBuilder;
 @Configuration
 public class KafkaConfig {
     @Bean
-    public NewTopic smsTopic() {
+    public NewTopic smsReminderTopic() {
         return TopicBuilder.name("task.deadline.sms")
-                .partitions(3)
+                .partitions(1)
                 .replicas(1)
                 .build();
     }

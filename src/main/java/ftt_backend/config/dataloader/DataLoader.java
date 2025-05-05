@@ -2,9 +2,16 @@
  * DataLoader 클래스는 서버 실행 시 자동으로 기본 사용자 계정을 생성하기 위해 사용
  */
 package ftt_backend.config.dataloader;
+import ftt_backend.model.Task;
 import ftt_backend.model.UserInfo;
+import ftt_backend.repository.TaskRepository;
+import ftt_backend.service.TaskService;
 import ftt_backend.service.UserService;
+import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobParametersBuilder;
+import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import java.time.LocalDate;
@@ -15,23 +22,62 @@ public class DataLoader implements CommandLineRunner {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private TaskRepository taskRepository;
+
+    @Autowired
+    private JobLauncher jobLauncher;
+
+    /** BatchConfig 에서 정의한 ’smsReminderJob’ 을 주입 */
+    @Autowired
+    @Qualifier("smsReminderJob")
+    private Job smsReminderJob;
+
     // 서버 실행 시작 후 실행되는 메서드
     @Override
     public void run(String... args) throws Exception {
-        // UserInfo 엔티티 인스턴스를 생성
+        // 1) 기본 사용자 계정 생성
         UserInfo user = new UserInfo();
         user.setUserId("test");
         user.setUsername("test");
-        user.setEmail("qw@12");
-        user.setPhoneNumber("12341232132");
-        user.setBirthDate(generateRandomBirthDate());
+        user.setEmail("test@example.com");
+        // 반드시 E.164 형식으로
+        user.setPhoneNumber("+821071231906");
+        user.setBirthDate("1990-01-01");
         user.setPassword("1234");
         user.setRole("USER");
+        user.setSmsOptIn(true);                   // SMS 수신 동의 꼭 true 로
         // UserService를 사용하여 사용자 정보를 저장
         userService.saveUser(user);
 
-        // 서버 콘솔에 기본 사용자 계정 생성 로그를 출력
-        System.out.println("기본 사용자 계정이 생성되었습니다: " + user.toString());
+        System.out.println(">> 기본 사용자 생성: " + user);
+
+        // 2) ‘내일’ 마감인 테스트 Task 하나 생성
+        Task task = new Task();
+        task.setUser(user);
+        task.setTitle("자동생성 테스트 과제");
+        task.setDescription("DataLoader 로 생성된 과제입니다.");
+        task.setCreatedAt(LocalDate.now());
+        task.setDueDate(LocalDate.now().plusDays(1));
+        task.setPriority("보통");
+        task.setStatus("진행중");
+        task.setAssignee("홍길동");
+        task.setMemo("자동으로 만든 메모");
+        taskRepository.save(task);
+
+        System.out.println(">> 테스트 Task 생성: " + task);
+
+        // 3) BatchJob 실행 → Kafka 에 ReminderMessage 발행 → SMS 리스너가 문자 발송
+        try {
+            jobLauncher.run(
+                    smsReminderJob,
+                    new JobParametersBuilder()
+                            .addLong("time", System.currentTimeMillis())
+                            .toJobParameters()
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**

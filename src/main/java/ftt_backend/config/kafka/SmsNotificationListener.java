@@ -5,7 +5,7 @@ import com.twilio.http.TwilioRestClient;
 import ftt_backend.config.batch.dto.ReminderMessage;
 import ftt_backend.repository.UserRepository;
 import ftt_backend.model.UserInfo;
-import org.springframework.beans.factory.annotation.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -14,8 +14,7 @@ public class SmsNotificationListener {
 
     private final TwilioRestClient twilioClient;
     private final String fromPhone;
-    @Autowired
-    private UserRepository userRepo;
+    private final UserRepository userRepo;
 
     public SmsNotificationListener(
             TwilioRestClient twilioClient,
@@ -29,22 +28,26 @@ public class SmsNotificationListener {
 
     @KafkaListener(topics = "task.deadline.sms", groupId = "todo-reminder")
     public void onReminderMessage(ReminderMessage msg) {
-        // 1) DB 에 사용자 정보 다시 조회 (phoneNumber 로 lookup)
         userRepo.findByPhoneNumber(msg.getPhoneNumber())
-                .filter(UserInfo::getSmsOptIn)         // 2) SMS 동의 여부 확인
+                .filter(UserInfo::getSmsOptIn)
                 .ifPresent(user -> {
-                    // 3) 실제 SMS 전송
+                    // E.164 포맷 보정 (0101234→+82101234)
+                    String raw = msg.getPhoneNumber();
+                    String to  = raw.startsWith("+") ? raw
+                            : raw.replaceFirst("^0", "+82");
+
                     String body = String.format(
-                            "할 일 #%d \"%s\"의 마감일이 %s 입니다. 확인하세요!",
-                            msg.getTaskId(),
-                            msg.getTaskTitle(),
-                            msg.getDueDate()
+                            "할 일 #%d “%s” 마감일이 %s 입니다.",
+                            msg.getTaskId(), msg.getTaskTitle(), msg.getDueDate()
                     );
+
                     Message.creator(
-                            new com.twilio.type.PhoneNumber(msg.getPhoneNumber()),
-                            new com.twilio.type.PhoneNumber(fromPhone),
-                            body
-                    ).create(twilioClient);
+                                    new com.twilio.type.PhoneNumber(to),
+                                    new com.twilio.type.PhoneNumber(fromPhone),
+                                    body
+                            )
+                            // 전역 초기화했으므로 인자 없이도, 또는 twilioClient 전달
+                            .create(twilioClient);
                 });
     }
 }
