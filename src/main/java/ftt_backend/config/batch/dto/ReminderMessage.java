@@ -1,14 +1,12 @@
 package ftt_backend.config.batch.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDate;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 @Getter
 @Setter
 public class ReminderMessage {

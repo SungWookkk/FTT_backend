@@ -26,7 +26,11 @@ public class SmsNotificationListener {
         this.userRepo     = userRepo;
     }
 
-    @KafkaListener(topics = "task.deadline.sms", groupId = "todo-reminder")
+    @KafkaListener(
+            topics = "task.deadline.sms",
+            containerFactory = "reminderListenerFactory",
+            groupId = "todo-reminder"
+    )
     public void onReminderMessage(ReminderMessage msg) {
         userRepo.findByPhoneNumber(msg.getPhoneNumber())
                 .filter(UserInfo::getSmsOptIn)
