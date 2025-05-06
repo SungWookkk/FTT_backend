@@ -7,3 +7,9 @@
 - 모든 Task 조회 / 생성 / 수정 초기 로직 설계
 - REST API : FE와 BE axios 통신 설계(TaskController)
 - 위 로직에 따른 비지니스 로직 설계
+
+
+5/5 batch job 설정 
+5/5 twilio 연동 
+5/5 kafka 환경 설정
+
