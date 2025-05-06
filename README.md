@@ -10,6 +10,6 @@
 
 
 5/5 batch job 설정 
-5/5 twilio 연동 
-5/5 kafka 환경 설정
+- twilio 연동 
+- kafka 환경 설정
 
