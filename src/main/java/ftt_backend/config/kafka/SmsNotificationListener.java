@@ -28,7 +28,7 @@ public class SmsNotificationListener {
 
     @KafkaListener(
             topics = "task.deadline.sms",
-            containerFactory = "reminderListenerFactory",
+            containerFactory = "kafkaListenerContainerFactory",
             groupId = "todo-reminder"
     )
     public void onReminderMessage(ReminderMessage msg) {
