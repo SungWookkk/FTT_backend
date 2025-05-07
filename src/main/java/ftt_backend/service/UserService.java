@@ -36,11 +36,27 @@ public class UserService {
     }
 
     // 회원가입
-    public void saveUser(UserInfo user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setRole("USER"); // 기본 역할은 USER로 설정
-        userRepository.save(user);
+    public UserInfo saveUser(UserInfo user) {
+        // 비밀번호가 null 이 아닌 경우에만 인코딩
+        if (user.getPassword() != null) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
+        user.setRole("USER");
+        return userRepository.save(user);
     }
+    /** 휴대폰 번호 중복 체크용 래퍼 */
+    public boolean existsByPhoneNumber(String phoneNumber) {
+        return userRepository.existsByPhoneNumber(phoneNumber);
+    }
+    /**
+     * 휴대전화 번호로 사용자 조회
+     * 추가: DataLoader 등에서 중복 체크 후 로드용
+     */
+    public UserInfo findByPhoneNumber(String phoneNumber) {
+        return userRepository.findByPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다: " + phoneNumber));
+    }
+
 
     // 로그인
     public String authenticate(String userId, String password) {

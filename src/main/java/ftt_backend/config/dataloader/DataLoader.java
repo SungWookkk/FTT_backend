@@ -13,6 +13,7 @@ import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.util.concurrent.ThreadLocalRandom;
@@ -34,26 +35,32 @@ public class DataLoader implements CommandLineRunner {
     private Job smsReminderJob;
 
     // 서버 실행 시작 후 실행되는 메서드
+
     @Override
     public void run(String... args) throws Exception {
-        // 1) 기본 사용자 계정 생성
-        UserInfo user = new UserInfo();
-        user.setUserId("test");
-        user.setUsername("test");
-        user.setEmail("test@example.com");
-        // 반드시 E.164 형식으로
-        user.setBirthDate("1990-01-01");
-        user.setPassword("1234");
-        user.setRole("USER");
-        user.setSmsOptIn(true);                   // SMS 수신 동의 꼭 true 로
-        // UserService를 사용하여 사용자 정보를 저장
-        userService.saveUser(user);
+        // === 1) 기본 사용자 계정 생성 (중복 방지 & 기존 사용자 로드) ===
+        UserInfo defaultUser = new UserInfo();
+        defaultUser.setUserId("test");
+        defaultUser.setUsername("test");
+        defaultUser.setEmail("test@example.com");
+        defaultUser.setBirthDate("1990-01-01");
+        defaultUser.setPhoneNumber("+821071231906");
+        defaultUser.setPassword("1234");
+        defaultUser.setRole("USER");
+        defaultUser.setSmsOptIn(true);
 
-        System.out.println(">> 기본 사용자 생성: " + user);
+        UserInfo savedUser;
+        try {
+            savedUser = userService.saveUser(defaultUser);    // 수정: saveUser가 UserInfo를 반환하도록 처리
+            System.out.println(">> 기본 사용자 생성: " + savedUser);
+        } catch (DataIntegrityViolationException ex) {
+            savedUser = userService.findByPhoneNumber(defaultUser.getPhoneNumber());
+            System.out.println(">> 기본 사용자 이미 존재, 불러오기: " + savedUser);
+        }
 
         // 2) ‘내일’ 마감인 테스트 Task 하나 생성
         Task task = new Task();
-        task.setUser(user);
+        task.setUser(savedUser);
         task.setTitle("자동생성 테스트 과제");
         task.setDescription("DataLoader 로 생성된 과제입니다.");
         task.setCreatedAt(LocalDate.now());

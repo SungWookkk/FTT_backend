@@ -1,6 +1,7 @@
 package ftt_backend.repository;
 
 import ftt_backend.model.Task;
+import ftt_backend.model.UserInfo;
 import org.springframework.data.domain.Page;              // ← 스프링 데이터 Page
 import org.springframework.data.domain.Pageable;          // ← 스프링 데이터 Pageable
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -29,7 +30,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     Page<Task> findImminentTasks(
             @Param("today") LocalDate today,
             @Param("tomorrow") LocalDate tomorrow,
-            Pageable pageable                // ← org.springframework.data.domain.Pageable
+            Pageable pageable
     );
-
+    boolean existsByUserAndTitleAndDueDate(UserInfo user, String title, LocalDate dueDate);
 }
