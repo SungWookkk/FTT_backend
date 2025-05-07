@@ -24,7 +24,8 @@ public class KafkaConsumerConfig {
     public ConsumerFactory<String, ReminderMessage> reminderConsumerFactory() {
         JsonDeserializer<ReminderMessage> deserializer =
                 new JsonDeserializer<>(ReminderMessage.class)
-                        .trustedPackages("*");
+                        .trustedPackages("*")
+                        .ignoreTypeHeaders();  // 안전하게
 
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
