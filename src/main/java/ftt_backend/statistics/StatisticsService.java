@@ -40,7 +40,7 @@ public class StatisticsService {
         long total = taskRepo.countByUser_Id(userId);
 
         // 3) 내가 완료한 과제 수
-        long done = taskRepo.countByUser_IdAndStatus(userId, "완료");
+        long done   = taskRepo.countByUser_IdAndStatusIn(userId, List.of("완료", "DONE"));
 
         // 4) 내가 실패한 과제 수
         long failed = taskRepo.countByUser_IdAndStatus(userId, "실패");
@@ -63,11 +63,16 @@ public class StatisticsService {
         int year = Year.now().getValue();
         @SuppressWarnings("unchecked")
         List<Tuple> rows = em.createNativeQuery(
-                        "select date_format(created_at, '%b') as label, count(*) as value " +
-                                "  from task " +
-                                " where year(created_at)=? and user_id = ? " +
-                                " group by month(created_at) " +
-                                " order by month(created_at)", Tuple.class)
+                        """
+                        select
+                          date_format(created_at, '%b') as label,
+                          count(*)                      as value
+                        from task
+                       where year(created_at) = ?
+                         and user_id = ?
+                    group by month(created_at), date_format(created_at, '%b')
+                    order by month(created_at)
+                        """, Tuple.class)
                 .setParameter(1, year)
                 .setParameter(2, userId)
                 .getResultList();
@@ -84,7 +89,7 @@ public class StatisticsService {
      */
     public UserStatsDto getUserStats(Long userId) {
         long totalTasks   = taskRepo.countByUser_Id(userId);
-        long completed    = taskRepo.countByUser_IdAndStatus(userId, "완료");
+        long completed  = taskRepo.countByUser_IdAndStatusIn(userId, List.of("완료", "DONE"));
         double rate       = totalTasks > 0 ? completed * 100.0 / totalTasks : 0.0;
 
         // (optional) 한 달간 활동 여부를 세고 싶다면
