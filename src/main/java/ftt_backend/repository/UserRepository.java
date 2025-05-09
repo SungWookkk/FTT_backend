@@ -7,6 +7,7 @@ package ftt_backend.repository;
 import ftt_backend.model.UserInfo;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<UserInfo, Long> {
@@ -17,4 +18,10 @@ public interface UserRepository extends JpaRepository<UserInfo, Long> {
     Optional<UserInfo> findByPhoneNumber(String phoneNumber);
     // 추가: 휴대번호로 존재 여부를 체크할 메서드
     boolean existsByPhoneNumber(String phoneNumber);
+
+    /**
+     * lastLogin 컬럼이 LocalDate 로 있다고 가정했을때
+     * 해당 날짜 이후에 로그인한 사용자 수를 셈
+     */
+    long countByLastLoginAfter(LocalDate since);
 }

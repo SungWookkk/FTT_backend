@@ -33,4 +33,12 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             Pageable pageable
     );
     boolean existsByUserAndTitleAndDueDate(UserInfo user, String title, LocalDate dueDate);
+
+
+    // 특정 유저가 작성한 Task 총 개수
+    long countByUser_Id(Long userId);
+
+    // 특정 유저가 작성한 Task 중 상태(status)에 따른 개수
+    long countByUser_IdAndStatus(Long userId, String status);
+
 }
