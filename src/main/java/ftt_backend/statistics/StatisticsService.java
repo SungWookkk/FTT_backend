@@ -85,24 +85,30 @@ public class StatisticsService {
     }
 
     /**
-     * 전체 사용자 통계
+     * 전체 작업 통계
      */
-    public UserStatsDto getUserStats(Long userId) {
-        long totalTasks   = taskRepo.countByUser_Id(userId);
-        long completed  = taskRepo.countByUser_IdAndStatusIn(userId, List.of("완료", "DONE"));
-        double rate       = totalTasks > 0 ? completed * 100.0 / totalTasks : 0.0;
+    public UserStatsDto getUserStats() {
+        // 1) 전체 과제 수
+        long totalTasks = taskRepo.count();
 
-        // (optional) 한 달간 활동 여부를 세고 싶다면
-        long activeSinceMonth = em.createQuery(
-                        "select count(t) from Task t where t.user.id = :uid and t.createdAt >= :since", Long.class)
-                .setParameter("uid", userId)
+        // 2) 한 달 내에 생성된 과제 수
+        long activeTasks = em.createQuery(
+                        "select count(t) from Task t where t.createdAt >= :since", Long.class)
                 .setParameter("since", LocalDate.now().minusMonths(1))
                 .getSingleResult();
 
+        // 3) 전체 완료된 과제 수
+        long completedTasks = taskRepo.countByStatusIn(List.of("완료", "DONE"));
+
+        // 4) 전체 완료율 계산
+        double completionRate = totalTasks > 0
+                ? completedTasks * 100.0 / totalTasks
+                : 0.0;
+
         return new UserStatsDto(
-                totalTasks,         // 전체 과제 수
-                activeSinceMonth,   // 한 달간 작성 과제 수
-                rate
+                totalTasks,
+                activeTasks,
+                completionRate
         );
     }
 }

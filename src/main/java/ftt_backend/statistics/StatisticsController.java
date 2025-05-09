@@ -59,11 +59,9 @@ public class StatisticsController {
         return statsService.getMonthly(meId);
     }
 
+    /** 전체 작업 통계 */
     @GetMapping("/users")
-    public UserStatsDto getUserStats(
-            @RequestHeader("Authorization") String authHeader
-    ) {
-        Long meId = resolveCurrentUserDbId(authHeader);
-        return statsService.getUserStats(meId);
+    public UserStatsDto getAllTaskStats() {
+        return statsService.getUserStats();
     }
 }
