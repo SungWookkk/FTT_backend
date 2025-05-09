@@ -5,10 +5,11 @@ import ftt_backend.service.UserService;
 import ftt_backend.statistics.dto.MonthlyDto;
 import ftt_backend.statistics.dto.OverviewDto;
 import ftt_backend.statistics.dto.UserStatsDto;
+import ftt_backend.config.JwtUtils;          // ← JWT 유틸 임포트
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -16,28 +17,53 @@ import java.util.List;
 public class StatisticsController {
 
     @Autowired private StatisticsService statsService;
-    @Autowired private UserService userService;  // DB 조회용
+    @Autowired private UserService userService;
+    @Autowired private JwtUtils jwtUtils;   // ← JWT 유틸 주입
 
-    /** 카드형 개요 통계 */
+    /**
+     * HTTP 헤더에서 Bearer 토큰을 꺼내서,
+     * jwtUtils.validateToken 으로 검증 후,
+     * jwtUtils.getAuthentication(token) 으로 Authentication 얻고,
+     * 그 이름(username)을 UserService.findByUserId 에 넘겨서 DB PK 조회
+     */
+    private Long resolveCurrentUserDbId(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new RuntimeException("Authorization 헤더가 없거나 형식이 잘못되었습니다.");
+        }
+        String token = authHeader.substring(7);
+
+        if (!jwtUtils.validateToken(token)) {
+            throw new RuntimeException("토큰 검증 실패");
+        }
+
+        Authentication authentication = jwtUtils.getAuthentication(token);
+        String userId = authentication.getName();
+        UserInfo me = userService.findByUserId(userId);
+        return me.getId();
+    }
+
+
     @GetMapping("/overview")
-    public List<OverviewDto> getOverview(Principal principal) {
-        // 1) 로그인한 사람의 userId(principal.getName()) 로 UserInfo 조회
-        UserInfo me = userService.findByUserId(principal.getName());
-        // 2) 그 사용자의 DB PK(id)를 서비스로 넘겨서 통계 생성
-        return statsService.getOverview(me.getId());
+    public List<OverviewDto> getOverview(
+            @RequestHeader("Authorization") String authHeader
+    ) {
+        Long meId = resolveCurrentUserDbId(authHeader);
+        return statsService.getOverview(meId);
     }
 
-    /** 월별 차트 데이터 */
     @GetMapping("/monthly")
-    public List<MonthlyDto> getMonthly(Principal principal) {
-        UserInfo me = userService.findByUserId(principal.getName());
-        return statsService.getMonthly(me.getId());
+    public List<MonthlyDto> getMonthly(
+            @RequestHeader("Authorization") String authHeader
+    ) {
+        Long meId = resolveCurrentUserDbId(authHeader);
+        return statsService.getMonthly(meId);
     }
 
-    /** 본인 사용자 통계 */
     @GetMapping("/users")
-    public UserStatsDto getUserStats(Principal principal) {
-        UserInfo me = userService.findByUserId(principal.getName());
-        return statsService.getUserStats(me.getId());
+    public UserStatsDto getUserStats(
+            @RequestHeader("Authorization") String authHeader
+    ) {
+        Long meId = resolveCurrentUserDbId(authHeader);
+        return statsService.getUserStats(meId);
     }
 }
