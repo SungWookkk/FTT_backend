@@ -29,33 +29,29 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager authenticationManager) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                   AuthenticationManager authMgr) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/ws/**").permitAll()
-                        .requestMatchers("/topic/**").permitAll()
-                        .requestMatchers("/app/**").permitAll()
-                        // 기존 허용 경로들
-                        .requestMatchers(
-                                "/",
-                                "/signup",
-                                "/login",
-                                "/dashboard",
-                                "/favicon.ico",
-                                "/manifest.json",
-                                "/logo192.png",
-                                "/static/**",
-                                "/api/auth/**",
-                                "/api/tasks/**"
-                        ).permitAll()
-                        .requestMatchers("/**").permitAll()
-                        .anyRequest().authenticated()
+                                //  공개할 엔드포인트들
+                                .requestMatchers("/ws/**", "/topic/**", "/app/**").permitAll()
+                                .requestMatchers("/", "/signup", "/login", "/dashboard",
+                                        "/favicon.ico", "/manifest.json", "/logo192.png",
+                                        "/static/**", "/api/auth/**", "/api/tasks/**", "/api/statistics/**")
+                                .permitAll()
+
+                                //  그 외 모든 요청은 permitAll 유지
+                                .requestMatchers("/**").permitAll()
                 )
-                .addFilterBefore(new JwtAuthenticationFilter(authenticationManager, jwtUtils),
-                        UsernamePasswordAuthenticationFilter.class) // JWT 필터 추가
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)); // 세션 비활성화
+                .addFilterBefore(
+                        new JwtAuthenticationFilter(authMgr, jwtUtils),
+                        UsernamePasswordAuthenticationFilter.class
+                )
+                .sessionManagement(sm ->
+                        sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                );
 
         return http.build();
     }
