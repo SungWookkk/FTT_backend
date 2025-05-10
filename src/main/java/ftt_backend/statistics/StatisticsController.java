@@ -2,6 +2,7 @@ package ftt_backend.statistics;
 
 import ftt_backend.model.UserInfo;
 import ftt_backend.service.UserService;
+import ftt_backend.statistics.dto.DailyDto;
 import ftt_backend.statistics.dto.MonthlyDto;
 import ftt_backend.statistics.dto.OverviewDto;
 import ftt_backend.statistics.dto.UserStatsDto;
@@ -63,5 +64,17 @@ public class StatisticsController {
     @GetMapping("/users")
     public UserStatsDto getAllTaskStats() {
         return statsService.getUserStats();
+    }
+    /**
+     * 일별 통계 (year, month 쿼리 파라미터)
+     */
+    @GetMapping("/daily")
+    public List<DailyDto> getDaily(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam("year") int year,
+            @RequestParam("month") int month
+    ) {
+        Long meId = resolveCurrentUserDbId(authHeader);
+        return statsService.getDaily(meId, year, month);
     }
 }

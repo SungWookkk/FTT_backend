@@ -2,6 +2,7 @@ package ftt_backend.statistics;
 
 import ftt_backend.repository.TaskRepository;
 import ftt_backend.repository.UserRepository;
+import ftt_backend.statistics.dto.DailyDto;
 import ftt_backend.statistics.dto.MonthlyDto;
 import ftt_backend.statistics.dto.OverviewDto;
 import ftt_backend.statistics.dto.UserStatsDto;
@@ -110,5 +111,35 @@ public class StatisticsService {
                 activeTasks,
                 completionRate
         );
+    }
+    /**
+     * 주어진 년·월, 사용자에 대해
+     * 일(day)별 작업 시작 수를 반환
+     */
+    public List<DailyDto> getDaily(Long userId, int year, int month) {
+        @SuppressWarnings("unchecked")
+        List<Tuple> rows = em.createNativeQuery(
+                        """
+                        SELECT
+                          DAY(created_at) AS label,
+                          COUNT(*)         AS value
+                        FROM task
+                        WHERE YEAR(created_at)=?
+                          AND MONTH(created_at)=?
+                          AND user_id=?
+                        GROUP BY DAY(created_at)
+                        ORDER BY DAY(created_at)
+                        """, Tuple.class)
+                .setParameter(1, year)
+                .setParameter(2, month)
+                .setParameter(3, userId)
+                .getResultList();
+
+        return rows.stream()
+                .map(t -> new DailyDto(
+                        String.valueOf(((Number)t.get("label")).intValue()),
+                        ((Number)t.get("value")).longValue()
+                ))
+                .collect(Collectors.toList());
     }
 }
