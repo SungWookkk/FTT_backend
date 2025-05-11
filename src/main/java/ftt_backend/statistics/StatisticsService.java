@@ -139,4 +139,92 @@ public class StatisticsService {
                 ))
                 .collect(Collectors.toList());
     }
+    public DailyDetailDto getDailyDetail(Long userId, int year, int month, int day) {
+        // JPQL 함수 day/month/year 사용
+        long total = em.createQuery(
+                        "select count(t) from Task t " +
+                                " where t.user.id=:uid " +
+                                "   and function('year', t.createdAt)=:y " +
+                                "   and function('month', t.createdAt)=:m " +
+                                "   and function('day', t.createdAt)=:d"
+                        , Long.class)
+                .setParameter("uid", userId)
+                .setParameter("y", year)
+                .setParameter("m", month)
+                .setParameter("d", day)
+                .getSingleResult();
+
+        long completed = em.createQuery(
+                        "select count(t) from Task t " +
+                                " where t.user.id=:uid " +
+                                "   and function('year', t.createdAt)=:y " +
+                                "   and function('month', t.createdAt)=:m " +
+                                "   and function('day', t.createdAt)=:d " +
+                                "   and t.status in ('완료','DONE')"
+                        , Long.class)
+                .setParameter("uid", userId)
+                .setParameter("y", year)
+                .setParameter("m", month)
+                .setParameter("d", day)
+                .getSingleResult();
+
+        long failed = em.createQuery(
+                        "select count(t) from Task t " +
+                                " where t.user.id=:uid " +
+                                "   and function('year', t.createdAt)=:y " +
+                                "   and function('month', t.createdAt)=:m " +
+                                "   and function('day', t.createdAt)=:d " +
+                                "   and t.status = '실패'"
+                        , Long.class)
+                .setParameter("uid", userId)
+                .setParameter("y", year)
+                .setParameter("m", month)
+                .setParameter("d", day)
+                .getSingleResult();
+
+        return new DailyDetailDto(total, completed, failed);
+    }
+
+    // 달의 생성,완료,실패 task 반환
+    public MonthlyDetailDto getMonthlyDetail(Long userId, int year, int month) {
+        // 전체 생성 개수
+        long total = em.createQuery(
+                        "select count(t) from Task t " +
+                                " where t.user.id=:uid " +
+                                "   and function('year', t.createdAt)=:y " +
+                                "   and function('month', t.createdAt)=:m"
+                        , Long.class)
+                .setParameter("uid", userId)
+                .setParameter("y", year)
+                .setParameter("m", month)
+                .getSingleResult();
+
+        // 완료 개수
+        long completed = em.createQuery(
+                        "select count(t) from Task t " +
+                                " where t.user.id=:uid " +
+                                "   and function('year', t.createdAt)=:y " +
+                                "   and function('month', t.createdAt)=:m " +
+                                "   and t.status in ('완료','DONE')"
+                        , Long.class)
+                .setParameter("uid", userId)
+                .setParameter("y", year)
+                .setParameter("m", month)
+                .getSingleResult();
+
+        // 실패 개수
+        long failed = em.createQuery(
+                        "select count(t) from Task t " +
+                                " where t.user.id=:uid " +
+                                "   and function('year', t.createdAt)=:y " +
+                                "   and function('month', t.createdAt)=:m " +
+                                "   and t.status = '실패'"
+                        , Long.class)
+                .setParameter("uid", userId)
+                .setParameter("y", year)
+                .setParameter("m", month)
+                .getSingleResult();
+
+        return new MonthlyDetailDto(total, completed, failed);
+    }
 }

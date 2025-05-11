@@ -84,4 +84,13 @@ public class StatisticsController {
         Long meId = resolveCurrentUserDbId(authHeader);
         return statsService.getDailyDetail(meId, year, month, day);
     }
+    @GetMapping("/monthly/detail")
+    public MonthlyDetailDto getMonthlyDetail(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam int year,
+            @RequestParam int month
+    ) {
+        Long meId = resolveCurrentUserDbId(authHeader);
+        return statsService.getMonthlyDetail(meId, year, month);
+    }
 }
