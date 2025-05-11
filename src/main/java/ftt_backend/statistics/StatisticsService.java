@@ -69,7 +69,7 @@ public class StatisticsService {
         );
     }
     /**
-     * 월별 차트 데이터
+     * 월별 차트 데이터a
      */
     public List<MonthlyDto> getMonthly(Long userId) {
         int year = Year.now().getValue();
