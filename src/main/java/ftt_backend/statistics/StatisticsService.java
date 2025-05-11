@@ -28,8 +28,9 @@ public class StatisticsService {
         // 1) 평균 처리 시간: 완료된 내 task만
         Double avgDays = em.createQuery(
                         "select avg(datediff(t.dueDate, t.createdAt)) " +
-                                "from Task t " +
-                                "where t.status = '완료' and t.user.id = :uid", Double.class)
+                                "  from Task t " +
+                                " where t.status = '완료' and t.user.id = :uid",
+                        Double.class)
                 .setParameter("uid", userId)
                 .getSingleResult();
         String avgText = String.format("%.1f일", avgDays);
@@ -38,13 +39,26 @@ public class StatisticsService {
         long total = taskRepo.countByUser_Id(userId);
 
         // 3) 내가 완료한 과제 수
-        long done   = taskRepo.countByUser_IdAndStatusIn(userId, List.of("완료", "DONE"));
+        long done = taskRepo.countByUser_IdAndStatusIn(userId, List.of("완료","DONE"));
 
         // 4) 내가 실패한 과제 수
         long failed = taskRepo.countByUser_IdAndStatus(userId, "실패");
 
-        // 5) (예시)
-        String rank = "857위";
+        // 5) 실제 DB 조회로 내 순위 계산 (완료된 Task 수 기준)
+        long myCompleted = done;
+        Object rankResult = em.createNativeQuery(
+                        "SELECT COUNT(*) + 1 FROM ( " +
+                                "    SELECT user_id, COUNT(*) AS cnt " +
+                                "      FROM task " +
+                                "     WHERE status IN ('완료','DONE') " +
+                                "     GROUP BY user_id " +
+                                "    HAVING cnt > ? " +
+                                ") t"
+                )
+                .setParameter(1, myCompleted)
+                .getSingleResult();
+        long rankNum = ((Number) rankResult).longValue();
+        String rank = rankNum + "위";
 
         return List.of(
                 new OverviewDto("작업 처리 평균 시간", avgText, null),
