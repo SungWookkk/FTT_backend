@@ -2,10 +2,7 @@ package ftt_backend.statistics;
 
 import ftt_backend.repository.TaskRepository;
 import ftt_backend.repository.UserRepository;
-import ftt_backend.statistics.dto.DailyDto;
-import ftt_backend.statistics.dto.MonthlyDto;
-import ftt_backend.statistics.dto.OverviewDto;
-import ftt_backend.statistics.dto.UserStatsDto;
+import ftt_backend.statistics.dto.*;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Tuple;
 import org.springframework.beans.factory.annotation.Autowired;

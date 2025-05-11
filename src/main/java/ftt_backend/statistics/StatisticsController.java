@@ -2,10 +2,7 @@ package ftt_backend.statistics;
 
 import ftt_backend.model.UserInfo;
 import ftt_backend.service.UserService;
-import ftt_backend.statistics.dto.DailyDto;
-import ftt_backend.statistics.dto.MonthlyDto;
-import ftt_backend.statistics.dto.OverviewDto;
-import ftt_backend.statistics.dto.UserStatsDto;
+import ftt_backend.statistics.dto.*;
 import ftt_backend.config.JwtUtils;          // ← JWT 유틸 임포트
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -76,5 +73,15 @@ public class StatisticsController {
     ) {
         Long meId = resolveCurrentUserDbId(authHeader);
         return statsService.getDaily(meId, year, month);
+    }
+    @GetMapping("/daily/detail")
+    public DailyDetailDto getDailyDetail(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam int year,
+            @RequestParam int month,
+            @RequestParam int day
+    ) {
+        Long meId = resolveCurrentUserDbId(authHeader);
+        return statsService.getDailyDetail(meId, year, month, day);
     }
 }
