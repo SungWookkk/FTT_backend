@@ -1,7 +1,6 @@
 package ftt_backend.statistics;
 
 import ftt_backend.repository.TaskRepository;
-import ftt_backend.repository.UserRepository;
 import ftt_backend.statistics.dto.*;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Tuple;
@@ -30,7 +29,8 @@ public class StatisticsService {
                         "select avg(datediff(t.dueDate, t.createdAt)) " +
                                 "  from Task t " +
                                 " where t.status = '완료' and t.user.id = :uid",
-                        Double.class)
+                        Double.class
+                )
                 .setParameter("uid", userId)
                 .getSingleResult();
         String avgText = String.format("%.1f일", avgDays);
@@ -68,8 +68,10 @@ public class StatisticsService {
                 new OverviewDto("작업에 따른 사용자 순위", rank, null)
         );
     }
+
     /**
-     * 월별 차트 데이터a
+     * 월별 차트 데이터
+     * → 시작일(start_date) 기준으로 변경
      */
     public List<MonthlyDto> getMonthly(Long userId) {
         int year = Year.now().getValue();
@@ -77,22 +79,24 @@ public class StatisticsService {
         List<Tuple> rows = em.createNativeQuery(
                         """
                         select
-                          date_format(created_at, '%b') as label,
+                          date_format(start_date, '%b') as label,     /* 시작일 기준 */
                           count(*)                      as value
                         from task
-                       where year(created_at) = ?
+                       where year(start_date) = ?
                          and user_id = ?
-                    group by month(created_at), date_format(created_at, '%b')
-                    order by month(created_at)
-                        """, Tuple.class)
+                    group by month(start_date), date_format(start_date, '%b')
+                    order by month(start_date)
+                        """, Tuple.class
+                )
                 .setParameter(1, year)
                 .setParameter(2, userId)
                 .getResultList();
 
         return rows.stream()
                 .map(t -> new MonthlyDto(
-                        (String)t.get("label"),
-                        ((Number)t.get("value")).longValue()))
+                        (String) t.get("label"),
+                        ((Number) t.get("value")).longValue()
+                ))
                 .collect(Collectors.toList());
     }
 
@@ -100,47 +104,38 @@ public class StatisticsService {
      * 전체 작업 통계
      */
     public UserStatsDto getUserStats() {
-        // 1) 전체 과제 수
         long totalTasks = taskRepo.count();
-
-        // 2) 한 달 내에 생성된 과제 수
         long activeTasks = em.createQuery(
                         "select count(t) from Task t where t.createdAt >= :since", Long.class)
                 .setParameter("since", LocalDate.now().minusMonths(1))
                 .getSingleResult();
-
-        // 3) 전체 완료된 과제 수
         long completedTasks = taskRepo.countByStatusIn(List.of("완료", "DONE"));
-
-        // 4) 전체 완료율 계산
         double completionRate = totalTasks > 0
                 ? completedTasks * 100.0 / totalTasks
                 : 0.0;
 
-        return new UserStatsDto(
-                totalTasks,
-                activeTasks,
-                completionRate
-        );
+        return new UserStatsDto(totalTasks, activeTasks, completionRate);
     }
+
     /**
-     * 주어진 년·월, 사용자에 대해
-     * 일(day)별 작업 시작 수를 반환
+     * 일별 차트 데이터
+     * → 시작일(start_date) 기준으로 변경
      */
     public List<DailyDto> getDaily(Long userId, int year, int month) {
         @SuppressWarnings("unchecked")
         List<Tuple> rows = em.createNativeQuery(
                         """
                         SELECT
-                          DAY(created_at) AS label,
+                          DAY(start_date) AS label,    /* 시작일 기준 */
                           COUNT(*)         AS value
                         FROM task
-                        WHERE YEAR(created_at)=?
-                          AND MONTH(created_at)=?
+                        WHERE YEAR(start_date)=?
+                          AND MONTH(start_date)=?
                           AND user_id=?
-                        GROUP BY DAY(created_at)
-                        ORDER BY DAY(created_at)
-                        """, Tuple.class)
+                        GROUP BY DAY(start_date)
+                        ORDER BY DAY(start_date)
+                        """, Tuple.class
+                )
                 .setParameter(1, year)
                 .setParameter(2, month)
                 .setParameter(3, userId)
@@ -148,20 +143,25 @@ public class StatisticsService {
 
         return rows.stream()
                 .map(t -> new DailyDto(
-                        String.valueOf(((Number)t.get("label")).intValue()),
-                        ((Number)t.get("value")).longValue()
+                        String.valueOf(((Number) t.get("label")).intValue()),
+                        ((Number) t.get("value")).longValue()
                 ))
                 .collect(Collectors.toList());
     }
+
+    /**
+     * 일별 상세 데이터 (DailyDetailDto)
+     * → 시작일(startDate) 기준으로 변경
+     */
     public DailyDetailDto getDailyDetail(Long userId, int year, int month, int day) {
-        // JPQL 함수 day/month/year 사용
         long total = em.createQuery(
                         "select count(t) from Task t " +
-                                " where t.user.id=:uid " +
-                                "   and function('year', t.createdAt)=:y " +
-                                "   and function('month', t.createdAt)=:m " +
-                                "   and function('day', t.createdAt)=:d"
-                        , Long.class)
+                                " where t.user.id = :uid" +
+                                "   and function('year', t.startDate) = :y" +
+                                "   and function('month', t.startDate) = :m" +
+                                "   and function('day', t.startDate) = :d",
+                        Long.class
+                )
                 .setParameter("uid", userId)
                 .setParameter("y", year)
                 .setParameter("m", month)
@@ -170,12 +170,13 @@ public class StatisticsService {
 
         long completed = em.createQuery(
                         "select count(t) from Task t " +
-                                " where t.user.id=:uid " +
-                                "   and function('year', t.createdAt)=:y " +
-                                "   and function('month', t.createdAt)=:m " +
-                                "   and function('day', t.createdAt)=:d " +
-                                "   and t.status in ('완료','DONE')"
-                        , Long.class)
+                                " where t.user.id = :uid" +
+                                "   and function('year', t.startDate) = :y" +
+                                "   and function('month', t.startDate) = :m" +
+                                "   and function('day', t.startDate) = :d" +
+                                "   and t.status in ('완료','DONE')",
+                        Long.class
+                )
                 .setParameter("uid", userId)
                 .setParameter("y", year)
                 .setParameter("m", month)
@@ -184,12 +185,13 @@ public class StatisticsService {
 
         long failed = em.createQuery(
                         "select count(t) from Task t " +
-                                " where t.user.id=:uid " +
-                                "   and function('year', t.createdAt)=:y " +
-                                "   and function('month', t.createdAt)=:m " +
-                                "   and function('day', t.createdAt)=:d " +
-                                "   and t.status = '실패'"
-                        , Long.class)
+                                " where t.user.id = :uid" +
+                                "   and function('year', t.startDate) = :y" +
+                                "   and function('month', t.startDate) = :m" +
+                                "   and function('day', t.startDate) = :d" +
+                                "   and t.status = '실패'",
+                        Long.class
+                )
                 .setParameter("uid", userId)
                 .setParameter("y", year)
                 .setParameter("m", month)
@@ -199,41 +201,44 @@ public class StatisticsService {
         return new DailyDetailDto(total, completed, failed);
     }
 
-    // 달의 생성,완료,실패 task 반환
+    /**
+     * 월별 상세 데이터 (MonthlyDetailDto)
+     * → 시작일(startDate) 기준으로 변경
+     */
     public MonthlyDetailDto getMonthlyDetail(Long userId, int year, int month) {
-        // 전체 생성 개수
         long total = em.createQuery(
                         "select count(t) from Task t " +
-                                " where t.user.id=:uid " +
-                                "   and function('year', t.createdAt)=:y " +
-                                "   and function('month', t.createdAt)=:m"
-                        , Long.class)
+                                " where t.user.id = :uid" +
+                                "   and function('year', t.startDate) = :y" +
+                                "   and function('month', t.startDate) = :m",
+                        Long.class
+                )
                 .setParameter("uid", userId)
                 .setParameter("y", year)
                 .setParameter("m", month)
                 .getSingleResult();
 
-        // 완료 개수
         long completed = em.createQuery(
                         "select count(t) from Task t " +
-                                " where t.user.id=:uid " +
-                                "   and function('year', t.createdAt)=:y " +
-                                "   and function('month', t.createdAt)=:m " +
-                                "   and t.status in ('완료','DONE')"
-                        , Long.class)
+                                " where t.user.id = :uid" +
+                                "   and function('year', t.startDate) = :y" +
+                                "   and function('month', t.startDate) = :m" +
+                                "   and t.status in ('완료','DONE')",
+                        Long.class
+                )
                 .setParameter("uid", userId)
                 .setParameter("y", year)
                 .setParameter("m", month)
                 .getSingleResult();
 
-        // 실패 개수
         long failed = em.createQuery(
                         "select count(t) from Task t " +
-                                " where t.user.id=:uid " +
-                                "   and function('year', t.createdAt)=:y " +
-                                "   and function('month', t.createdAt)=:m " +
-                                "   and t.status = '실패'"
-                        , Long.class)
+                                " where t.user.id = :uid" +
+                                "   and function('year', t.startDate) = :y" +
+                                "   and function('month', t.startDate) = :m" +
+                                "   and t.status = '실패'",
+                        Long.class
+                )
                 .setParameter("uid", userId)
                 .setParameter("y", year)
                 .setParameter("m", month)
