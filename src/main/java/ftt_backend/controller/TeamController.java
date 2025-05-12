@@ -2,7 +2,9 @@ package ftt_backend.controller;
 
 import ftt_backend.model.Team;
 import ftt_backend.model.UserInfo;
+import ftt_backend.model.dto.TeamDto;
 import ftt_backend.repository.TeamRepository;
+import ftt_backend.repository.UserRepository;
 import ftt_backend.service.TeamService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -11,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/teams")
@@ -21,6 +24,9 @@ public class TeamController {
 
     @Autowired
     private TeamRepository teamRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     // 팀 생성 요청 처리 (헤더에서 팀 생성자의 아이디(X-User-Id) 를 받음)
     @PostMapping("/create")
@@ -72,5 +78,34 @@ public class TeamController {
     ) {
         teamService.leaveTeam(teamId, userId);
         return ResponseEntity.noContent().build();
+    }
+    @GetMapping("/{teamId}/detail")
+    public TeamDto getTeamDetail(@PathVariable Long teamId) {
+        Team team = teamService.findTeamById(teamId);
+
+        // 팀장 사용자 정보
+        Long leaderId = Long.valueOf(team.getTeamLeader());
+        UserInfo leader = userRepository.findById(leaderId)
+                .orElseThrow(() -> new RuntimeException("팀장 정보를 찾을 수 없습니다"));
+
+        // DTO 변환
+        TeamDto dto = new TeamDto();
+        dto.setId(team.getId());
+        dto.setTeamName(team.getTeamName());
+        dto.setDescription(team.getDescription());
+        dto.setAnnouncement(team.getAnnouncement());
+        dto.setCategory(team.getCategory());
+        dto.setStatus(team.getStatus());
+        dto.setLeaderUsername(leader.getUsername());
+
+        // 멤버 닉네임 목록
+        dto.setMemberUsernames(
+                team.getMembers()
+                        .stream()
+                        .map(UserInfo::getUsername)
+                        .collect(Collectors.toList())
+        );
+
+        return dto;
     }
 }
