@@ -36,7 +36,7 @@ public class Task {
     private String description;
 
     //시작일
-    @Column(name = "start_date")
+    @Column(name = "start_date", columnDefinition = "DATE")
     private LocalDate startDate;
 
     //마감일
