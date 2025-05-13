@@ -35,9 +35,12 @@ public class CommunityPost {
 
     /** 게시글 본문 */
     @Lob
-    @Column(name = "content", nullable = false)
+    @Column(
+            name = "content",
+            columnDefinition = "LONGTEXT",
+            nullable = false
+    )
     private String content;
-
     /** 게시 상태 (예: ACTIVE, DELETED) */
     @Column(name = "status", nullable = false, length = 20)
     private String status = "ACTIVE";
