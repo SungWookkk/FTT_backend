@@ -81,5 +81,10 @@ public class CommunityPostController {
                 "liked", result.liked
         ));
     }
+    @GetMapping("/author/{authorId}")
+    public ResponseEntity<List<CommunityPost>> listByAuthor(@PathVariable Long authorId) {
+        List<CommunityPost> posts = postService.getPostsByAuthor(authorId);
+        return ResponseEntity.ok(posts);
+    }
 
 }
