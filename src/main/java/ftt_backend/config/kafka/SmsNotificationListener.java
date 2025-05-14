@@ -39,7 +39,7 @@ public class SmsNotificationListener {
                     String raw = msg.getPhoneNumber();
                     String to = raw.startsWith("+") ? raw : raw.replaceFirst("^0", "+82");
                     String body = String.format(
-                            "할 일 #%d “%s” 마감일이 %s 입니다.",
+                            "할 일 #%d “%s” 마감일이 %s 입니다. 마감일이 얼마 남지 않았어요!",
                             msg.getTaskId(), msg.getTaskTitle(), msg.getDueDate()
                     );
 

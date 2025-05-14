@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class UserService {
@@ -104,5 +106,36 @@ public class UserService {
         return userRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
     }
-
+    /**
+     * OAuth2 로그인 사용자 정보 처리
+     * @param email      구글에서 제공된 이메일
+     * @param name       구글에서 제공된 사용자 이름
+     * @param pictureUrl 구글 프로필 이미지 URL
+     * @return 저장되거나 업데이트된 UserInfo
+     */
+    public UserInfo processOAuth2User(String email, String name, String pictureUrl) {
+        // 1) 이메일로 기존 사용자 조회 (없으면 신규 생성)
+        Optional<UserInfo> existing = userRepository.findByEmail(email);
+        UserInfo user = existing.orElseGet(() -> {
+            UserInfo newUser = new UserInfo();
+            newUser.setUserId(email);
+            newUser.setUsername(name);
+            newUser.setEmail(email);
+            //소셜 계정엔 phoneNumber 정보가 없으므로 빈 문자열로 설정 (nullable=false 방지)
+            newUser.setPhoneNumber("");
+            //소셜 계정엔 birthDate 정보가 없으므로 빈 문자열로 설정 (nullable=false 방지)
+            newUser.setBirthDate("");
+            // OAuth 전용 랜덤 패스워드
+            newUser.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
+            newUser.setRole("USER");
+            newUser.setProfile_image(pictureUrl);
+            newUser.setSmsOptIn(false);
+            // 기본 뱃지 부여 로직 포함
+            return createUser(newUser);
+        });
+        // 2) 기존 사용자라면 프로필 정보만 업데이트
+        user.setUsername(name);
+        user.setProfile_image(pictureUrl);
+        return userRepository.save(user);
+    }
 }
