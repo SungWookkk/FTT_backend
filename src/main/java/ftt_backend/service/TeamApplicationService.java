@@ -3,9 +3,7 @@ package ftt_backend.service;
 import ftt_backend.model.Team;
 import ftt_backend.model.TeamApplication;
 import ftt_backend.model.UserInfo;
-import ftt_backend.repository.TeamApplicationRepository;
-import ftt_backend.repository.TeamRepository;
-import ftt_backend.repository.UserRepository;
+import ftt_backend.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,10 +17,22 @@ public class TeamApplicationService {
     private TeamRepository teamRepository;
 
     @Autowired
+    private TeamMemberRepository teamMemberRepository;
+
+    @Autowired
     private UserRepository userRepository;
 
     @Autowired
     private TeamApplicationRepository teamApplicationRepository;
+
+    @Autowired
+    private TeamReadingListRepository readingListRepo;
+
+    @Autowired
+    private TeamTaskRepository taskRepo;
+
+    @Autowired
+    private TeamChannelRepository teamChannelRepository;
 
     // 팀 신청 생성 (신청자의 ID는 헤더 등을 통해 전달받은 값 사용)
     @Transactional
@@ -132,14 +142,20 @@ public class TeamApplicationService {
      */
     @Transactional
     public void disbandTeam(Long teamId) {
-        if (!teamRepository.existsById(teamId)) {
+        if (!teamRepository.existsById(teamId))
             throw new RuntimeException("해당 팀이 존재하지 않습니다: " + teamId);
-        }
+
+        // 1) 팀 신청
+        teamApplicationRepository.deleteByTeamId(teamId);
+        // 2) 채널
+        teamChannelRepository.deleteByTeamId(teamId);
+        // 3) 읽기 자료
+        readingListRepo.deleteByTeamId(teamId);
+        // 4) 할 일
+        taskRepo.deleteByTeamId(teamId);
+        // 5) 멤버십
+        teamMemberRepository.deleteByTeamId(teamId);
+        // 6) 팀 삭제
         teamRepository.deleteById(teamId);
-    }
-    public Long getTeamIdByApplication(Long applicationId) {
-        TeamApplication app = teamApplicationRepository.findById(applicationId)
-                .orElseThrow(() -> new RuntimeException("신청을 찾을 수 없습니다."));
-        return app.getTeam().getId();
     }
 }
