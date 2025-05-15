@@ -1,4 +1,3 @@
-// src/main/java/ftt_backend/FttBackendApplication.java
 package ftt_backend;
 
 import io.github.cdimascio.dotenv.Dotenv;
@@ -36,7 +35,10 @@ public class FttBackendApplication {
 		if (googleId != null)     System.setProperty("GOOGLE_CLIENT_ID", googleId);
 		if (googleSecret != null) System.setProperty("GOOGLE_CLIENT_SECRET", googleSecret);
 
-		//  NAVER_CLIENT_ID 등도 동일하게 설정
+		String naverId       = socialEnv.get("NAVER_CLIENT_ID");
+		String naverSecret   = socialEnv.get("NAVER_CLIENT_SECRET");
+		if (naverId != null)     System.setProperty("NAVER_CLIENT_ID", naverId);
+		if (naverSecret != null) System.setProperty("NAVER_CLIENT_SECRET", naverSecret);
 
 		SpringApplication.run(FttBackendApplication.class, args);
 	}
