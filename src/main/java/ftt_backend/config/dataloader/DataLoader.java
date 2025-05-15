@@ -39,6 +39,7 @@ public class DataLoader implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         // === 1) 기본 사용자 계정 생성 (중복 방지 & 기존 사용자 로드) ===
+        String phone = "+821071231906";
         UserInfo defaultUser = new UserInfo();
         defaultUser.setUserId("test");
         defaultUser.setUsername("test");
@@ -48,14 +49,17 @@ public class DataLoader implements CommandLineRunner {
         defaultUser.setPassword("1234");
         defaultUser.setRole("USER");
         defaultUser.setSmsOptIn(true);
-
+        defaultUser.setProvider("LOCAL");
+        defaultUser.setProviderId(defaultUser.getUserId());
         UserInfo savedUser;
-        try {
-            savedUser = userService.saveUser(defaultUser);    // 수정: saveUser가 UserInfo를 반환하도록 처리
-            System.out.println(">> 기본 사용자 생성: " + savedUser);
-        } catch (DataIntegrityViolationException ex) {
-            savedUser = userService.findByPhoneNumber(defaultUser.getPhoneNumber());
+        if (userService.existsByPhoneNumber(phone)) {
+            // 이미 있으면 조회만
+            savedUser = userService.findByPhoneNumber(phone);
             System.out.println(">> 기본 사용자 이미 존재, 불러오기: " + savedUser);
+        } else {
+            // 없으면 생성
+            savedUser = userService.saveUser(defaultUser);
+            System.out.println(">> 기본 사용자 생성: " + savedUser);
         }
 
         // 2) ‘내일’ 마감인 테스트 Task 하나 생성

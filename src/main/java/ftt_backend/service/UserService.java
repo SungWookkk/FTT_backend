@@ -108,31 +108,49 @@ public class UserService {
     }
     /**
      * OAuth2 로그인 사용자 정보 처리
-     * @param email      구글에서 제공된 이메일
-     * @param name       구글에서 제공된 사용자 이름
-     * @param pictureUrl 구글 프로필 이미지 URL
-     * @return 저장되거나 업데이트된 UserInfo
+     * (provider + providerId 로 유니크하게 구분)
+     *
+     * @param email       제공된 이메일 (optional)
+     * @param name        사용자 이름
+     * @param pictureUrl  프로필 이미지 URL
+     * @param provider    "google", "naver", "kakao" 등
+     * @param providerId  소셜 프로바이더가 준 고유 ID
      */
-    public UserInfo processOAuth2User(String email, String name, String pictureUrl) {
-        // 1) 이메일로 기존 사용자 조회 (없으면 신규 생성)
-        Optional<UserInfo> existing = userRepository.findByEmail(email);
+    public UserInfo processOAuth2User(
+            String email,
+            String name,
+            String pictureUrl,
+            String provider,
+            String providerId
+    ) {
+        // 1) provider+providerId 로 기존 사용자 조회
+        Optional<UserInfo> existing =
+                userRepository.findByProviderAndProviderId(provider, providerId);
+
         UserInfo user = existing.orElseGet(() -> {
+            // 신규 사용자 생성
             UserInfo newUser = new UserInfo();
-            newUser.setUserId(email);
-            newUser.setUsername(name);
+            newUser.setUserId(provider + "_" + providerId);  // 예: "kakao_123456789"
+            newUser.setProvider(provider);
+            newUser.setProviderId(providerId);
+
+            // 이메일 동의 안 하면 null 허용
             newUser.setEmail(email);
-            //소셜 계정엔 phoneNumber 정보가 없으므로 빈 문자열로 설정 (nullable=false 방지)
-            newUser.setPhoneNumber("");
-            //소셜 계정엔 birthDate 정보가 없으므로 빈 문자열로 설정 (nullable=false 방지)
-            newUser.setBirthDate("");
-            // OAuth 전용 랜덤 패스워드
-            newUser.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
-            newUser.setRole("USER");
+
+            newUser.setUsername(name);
             newUser.setProfile_image(pictureUrl);
+            newUser.setPhoneNumber(null);
+            newUser.setBirthDate("");
+            newUser.setPassword(
+                    passwordEncoder.encode(UUID.randomUUID().toString())
+            );
+            newUser.setRole("USER");
             newUser.setSmsOptIn(false);
-            // 기본 뱃지 부여 로직 포함
+
+            // 기본 뱃지 부여 포함(createUser 내부 로직 재사용)
             return createUser(newUser);
         });
+
         // 2) 기존 사용자라면 프로필 정보만 업데이트
         user.setUsername(name);
         user.setProfile_image(pictureUrl);
