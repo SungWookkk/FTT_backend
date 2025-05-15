@@ -90,10 +90,15 @@ public class NaverController {
         String email = (String) resp.get("email");
         String name  = (String) resp.get("name");
         String pic   = (String) resp.get("profile_image");
+        String naverId   = resp.get("id").toString();   // 네이버 user-id
 
-        // 3) DB 저장/조회
-        UserInfo user = userService.processOAuth2User(email, name, pic);
-
+        UserInfo user = userService.processOAuth2User(
+                email,
+                name,
+                pic,
+                "naver",       // provider
+                naverId        // providerId
+        );
         // 4) JWT 발급
         String jwt = jwtUtils.generateToken(user.getUserId());
 

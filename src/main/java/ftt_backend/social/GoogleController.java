@@ -96,7 +96,15 @@ public class GoogleController {
         String email = (String) profile.get("email");
         String name  = (String) profile.get("name");
         String pic   = (String) profile.get("picture");
-        UserInfo user = userService.processOAuth2User(email, name, pic);
+        String googleId   = (String) profile.get("sub");  // 구글 user-id
+
+        UserInfo user = userService.processOAuth2User(
+                email,
+                name,
+                pic,
+                "google",      // provider
+                googleId       // providerId
+        );
 
         // 4) JWT 발급
         String jwt = jwtUtils.generateToken(user.getUserId());

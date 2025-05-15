@@ -29,10 +29,10 @@ public class UserInfo {
     @Column(name = "username", nullable = false, length = 50)
     private String username; // 사용자 닉네임
 
-    @Column(name = "email", unique = true, nullable = false, length = 100)
+    @Column(name = "email", unique = false, nullable = true, length = 100)
     private String email; // 이메일 주소
 
-    @Column(name = "phone_number", unique = true, nullable = false, length = 15)
+    @Column(name = "phone_number", unique = true, nullable = true, length = 15)
     private String phoneNumber; // 핸드폰 번호
 
     @Column(name = "birth_date", nullable = false, length = 10)
@@ -69,4 +69,9 @@ public class UserInfo {
     @Column(name = "sms_opt_in", nullable = false)
     private Boolean smsOptIn = false;
 
+    @Column(nullable = true)
+    private String provider;      // "google", "naver", "kakao" 등
+
+    @Column(name = "provider_id", nullable = true)
+    private String providerId;    // 소셜에서 내려준 고유 ID
 }
