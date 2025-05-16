@@ -1,5 +1,8 @@
 package ftt_backend.controller;
 
+import com.theokanning.openai.completion.chat.ChatCompletionRequest;
+import com.theokanning.openai.completion.chat.ChatMessage;
+import com.theokanning.openai.service.OpenAiService;
 import ftt_backend.config.JwtUtils;
 import ftt_backend.config.openai.AIToDoService;
 import ftt_backend.config.openai.dto.AIRequest;
@@ -18,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/tasks")
@@ -36,6 +40,9 @@ public class TaskController {
 
     @Autowired
     private AIToDoService aiToDoService;
+
+    @Autowired
+    private OpenAiService openAiService;
 
     @Autowired
     private JwtUtils jwtUtils;
@@ -108,32 +115,30 @@ public class TaskController {
     }
 
 
-    // AI 프롬프트로 Task 자동 생성
+
+    // ────────────────────────────────────────────────────────
+    // 1) 할 일 생성 전용: JSON 스펙을 파싱해서 Task 저장 (/api/tasks/ai-create)
+    // ────────────────────────────────────────────────────────
     @PostMapping("/ai-create")
     public ResponseEntity<?> aiCreate(
             @RequestBody AIRequest request,
             @RequestHeader("Authorization") String authorizationHeader
     ) {
         try {
-            // 1) 헤더에서 "Bearer " 제거
+            // 1) 헤더 검사·토큰 추출
             if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authorization 헤더 필요");
             }
             String token = authorizationHeader.substring(7);
-
-            // 2) 토큰 검증
             if (!jwtUtils.validateToken(token)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 토큰");
             }
-
-            // 3) 토큰에서 userId 추출
             String userId = jwtUtils.getAuthentication(token).getName();
-            logger.info("▶ AI 생성 요청: userId={}, prompt={}", userId, request.getPrompt());
 
-            // 4) 실제 AI > Task 생성
+            logger.info("▶ AI 생성 요청: userId={}, prompt={}", userId, request.getPrompt());
             Task created = aiToDoService.createTaskFromPrompt(request.getPrompt(), userId);
 
-            // 5) 엔티티 > DTO 변환 후 반환
+            // 5) 엔티티 → DTO
             TaskResponseDTO dto = new TaskResponseDTO();
             BeanUtils.copyProperties(created, dto);
             return ResponseEntity.ok(dto);
@@ -142,6 +147,52 @@ public class TaskController {
             logger.error("AI 생성 중 예외 발생", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("AI 생성 중 오류: " + e.getMessage());
+        }
+    }
+
+    // ────────────────────────────────────────────────────────
+    // 2) 자유 채팅 전용: 그냥 AI와 대화 (/api/tasks/chat)
+    // ────────────────────────────────────────────────────────
+    @PostMapping("/chat")
+    public ResponseEntity<?> aiChat(
+            @RequestBody AIRequest request,
+            @RequestHeader("Authorization") String authorizationHeader
+    ) {
+        try {
+            // 토큰 검증
+            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authorization 헤더 필요");
+            }
+            String token = authorizationHeader.substring(7);
+            if (!jwtUtils.validateToken(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 토큰");
+            }
+
+            // ChatCompletionRequest 구성
+            ChatCompletionRequest chatReq = ChatCompletionRequest.builder()
+                    .model("gpt-3.5-turbo")
+                    .messages(List.of(
+                            new ChatMessage("system", "당신은 친절한 AI 비서입니다."),
+                            new ChatMessage("user", request.getPrompt())
+                    ))
+                    .build();
+
+            // OpenAI 호출
+            String answer = openAiService
+                    .createChatCompletion(chatReq)
+                    .getChoices()
+                    .get(0)
+                    .getMessage()
+                    .getContent()
+                    .trim();
+
+            // 단순 메시지 형태로 반환
+            return ResponseEntity.ok(Map.of("message", answer));
+
+        } catch (Exception e) {
+            logger.error("AI 채팅 중 예외 발생", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("AI 채팅 중 오류: " + e.getMessage());
         }
     }
 }
