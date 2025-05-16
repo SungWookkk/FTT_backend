@@ -1,11 +1,19 @@
 package ftt_backend.controller;
 
+import ftt_backend.config.JwtUtils;
+import ftt_backend.config.openai.AIToDoService;
+import ftt_backend.config.openai.dto.AIRequest;
+import ftt_backend.config.openai.dto.TaskResponseDTO;
 import ftt_backend.model.Task;
 import ftt_backend.model.UserInfo;
 import ftt_backend.repository.TaskRepository;
 import ftt_backend.repository.UserRepository;
 import ftt_backend.service.TaskService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +22,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/tasks")
 public class TaskController {
+
+    private static final Logger logger = LoggerFactory.getLogger(TaskController.class);
 
     @Autowired
     private TaskService taskService;
@@ -24,6 +34,11 @@ public class TaskController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private AIToDoService aiToDoService;
+
+    @Autowired
+    private JwtUtils jwtUtils;
     // 모든 Task 조회
     @GetMapping("")
     public ResponseEntity<?> getAllTasks() {
@@ -37,6 +52,7 @@ public class TaskController {
         Task createdTask = taskService.createTask(task);
         return ResponseEntity.ok(createdTask);
     }
+
     // 단일 Task 조회
     @GetMapping("/{id}")
     public ResponseEntity<Task> getTaskById(@PathVariable Long id) {
@@ -89,5 +105,43 @@ public class TaskController {
             taskService.deleteTask(id);
         }
         return ResponseEntity.ok("작업들 삭제 : " + ids);
+    }
+
+
+    // AI 프롬프트로 Task 자동 생성
+    @PostMapping("/ai-create")
+    public ResponseEntity<?> aiCreate(
+            @RequestBody AIRequest request,
+            @RequestHeader("Authorization") String authorizationHeader
+    ) {
+        try {
+            // 1) 헤더에서 "Bearer " 제거
+            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authorization 헤더 필요");
+            }
+            String token = authorizationHeader.substring(7);
+
+            // 2) 토큰 검증
+            if (!jwtUtils.validateToken(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 토큰");
+            }
+
+            // 3) 토큰에서 userId 추출
+            String userId = jwtUtils.getAuthentication(token).getName();
+            logger.info("▶ AI 생성 요청: userId={}, prompt={}", userId, request.getPrompt());
+
+            // 4) 실제 AI > Task 생성
+            Task created = aiToDoService.createTaskFromPrompt(request.getPrompt(), userId);
+
+            // 5) 엔티티 > DTO 변환 후 반환
+            TaskResponseDTO dto = new TaskResponseDTO();
+            BeanUtils.copyProperties(created, dto);
+            return ResponseEntity.ok(dto);
+
+        } catch (Exception e) {
+            logger.error("AI 생성 중 예외 발생", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("AI 생성 중 오류: " + e.getMessage());
+        }
     }
 }
