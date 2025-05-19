@@ -21,4 +21,6 @@ public interface UserRepository extends JpaRepository<UserInfo, Long> {
     boolean existsByPhoneNumber(String phoneNumber);
     // provider+providerId 로 유저 찾기
     Optional<UserInfo> findByProviderAndProviderId(String provider, String providerId);
+    //유저아이디 검사
+    Boolean existsByUserId(String userId);
 }

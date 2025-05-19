@@ -4,6 +4,7 @@ import ftt_backend.model.Badge;
 import ftt_backend.model.UserBadge;
 import ftt_backend.model.UserInfo;
 import ftt_backend.config.JwtUtils;
+import ftt_backend.model.dto.SignupRequest;
 import ftt_backend.repository.BadgeRepository;
 import ftt_backend.repository.BadgeUserRepository;
 import ftt_backend.repository.UserRepository;
@@ -74,6 +75,42 @@ public class UserService {
         // JwtUtils를 사용하여 토큰 생성
         return jwtUtils.generateToken(user.getUserId());
     }
+
+    // ----------------------------------------------------
+    // SignupRequest 받아서 검증 후 회원가입 처리
+    // ----------------------------------------------------
+    public UserInfo registerUser(SignupRequest req) {
+        // 1) userId 중복 검사 (String 그대로 비교)
+        if (userRepository.existsByUserId(req.getUserId())) {
+            throw new IllegalArgumentException("이미 사용 중인 아이디입니다.");
+        }
+
+        // 2) 전화번호 중복 검사
+        if (userRepository.existsByPhoneNumber(req.getPhoneNumber())) {
+            throw new IllegalArgumentException("이미 등록된 휴대폰 번호입니다.");
+        }
+
+        // 3) 생년월일 만 7세 이상 체크
+        if (req.getBirthDate().plusYears(7).isAfter(LocalDate.now())) {
+            throw new IllegalArgumentException("만 7세 미만은 가입할 수 없습니다.");
+        }
+
+        // 4) DTO → 엔티티 매핑
+        UserInfo u = new UserInfo();
+        u.setUserId(req.getUserId());
+        u.setUsername(req.getUsername());
+        u.setEmail(req.getEmail());
+        u.setPhoneNumber(req.getPhoneNumber());
+        u.setBirthDate(req.getBirthDate().toString());
+        u.setPassword(req.getPassword());      // 암호화는 createUser()에서
+        u.setSmsOptIn(req.getSmsOptIn());
+        u.setProvider("LOCAL");
+        u.setProviderId(req.getUserId());
+
+        // 5) 암호화 + 기본 ROLE, 기본 뱃지 부여
+        return createUser(u);
+    }
+
 
     // 계정 생성시 뱃지 기본 단계 적용
     public UserInfo createUser(UserInfo userInfo) {
