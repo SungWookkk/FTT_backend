@@ -3,14 +3,16 @@ package ftt_backend.service;
 import ftt_backend.model.Badge;
 import ftt_backend.model.UserBadge;
 import ftt_backend.model.UserInfo;
+import ftt_backend.model.dto.BadgeProgressDTO;
 import ftt_backend.repository.BadgeRepository;
 import ftt_backend.repository.BadgeUserRepository;
 import ftt_backend.repository.TaskRepository;
+import ftt_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -26,6 +28,8 @@ public class BadgeService {
     @Autowired
     private TaskRepository taskRepository;
 
+    @Autowired
+    private UserRepository userRepository;
     /**
      * 사용자가 Task를 완료할 때마다 호출.
      *  1) 완료된 Task 개수 확인
@@ -73,5 +77,62 @@ public class BadgeService {
             this.badgeName = badgeName;
             this.threshold = threshold;
         }
+    }
+    /**
+     * 해당 사용자의 현재 배지 → 다음 배지까지의 진행률 계산
+     */
+    public BadgeProgressDTO getProgress(String loginUserId) {
+        // 0) 로그인 ID 로 UserInfo 조회
+        UserInfo user = userRepository.findByUserId(loginUserId)
+                .orElseThrow(() -> new RuntimeException("해당 사용자를 찾을 수 없습니다: " + loginUserId));
+
+        // 1) 완료된 Task 개수
+        int completed = taskRepository.countByUser_UserIdAndStatus(loginUserId, "DONE");
+
+        // 2) 뱃지 기준값 오름차순 정렬
+        List<Badge> badges = badgeRepository.findAll()
+                .stream()
+                .sorted(Comparator.comparingInt(Badge::getCompletionThreshold))
+                .toList();
+
+        // 3) 현재 사용자가 가진 뱃지 중 가장 높은 기준값
+        int lower = badgeUserRepository.findByUser(user).stream()
+                .map(ub -> ub.getBadge().getCompletionThreshold())
+                .max(Integer::compareTo)
+                .orElse(0);
+
+        // 4) 다음 뱃지 (기준값 > lower) 혹은 마지막 뱃지
+        Badge next = badges.stream()
+                .filter(b -> b.getCompletionThreshold() > lower)
+                .findFirst()
+                .orElse(badges.get(badges.size() - 1));
+        int upper = next.getCompletionThreshold();
+
+        // 5) 진행률 계산 (분모 0 이면 100%)
+        double rate;
+        int diff = upper - lower;
+        if (diff <= 0) {
+            rate = 1.0;
+        } else {
+            rate = (double)(completed - lower) / diff;
+            if (rate < 0) rate = 0;
+            if (rate > 1) rate = 1;
+        }
+
+        // 6) 현재 뱃지 이름
+        String currentName = badges.stream()
+                .filter(b -> b.getCompletionThreshold() == lower)
+                .map(Badge::getBadgeName)
+                .findFirst()
+                .orElse("없음");
+
+        return new BadgeProgressDTO(
+                currentName,
+                next.getBadgeName(),
+                completed,
+                lower,
+                upper,
+                rate
+        );
     }
 }

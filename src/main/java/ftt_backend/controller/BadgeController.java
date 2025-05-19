@@ -1,15 +1,20 @@
 package ftt_backend.controller;
 
+import ftt_backend.config.JwtUtils;
 import ftt_backend.model.Badge;
 import ftt_backend.model.Task;
 import ftt_backend.model.UserBadge;
 import ftt_backend.model.UserInfo;
+import ftt_backend.model.dto.BadgeProgressDTO;
 import ftt_backend.repository.BadgeRepository;
 import ftt_backend.repository.BadgeUserRepository;
 import ftt_backend.repository.TaskRepository;
 import ftt_backend.repository.UserRepository;
 import ftt_backend.service.BadgeService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -32,6 +37,9 @@ public class BadgeController {
 
     @Autowired
     private BadgeRepository badgeRepository;
+
+    @Autowired
+    private JwtUtils jwtUtils;
 
     @GetMapping("/badges")
     public List<Badge> getAllBadges() {
@@ -164,5 +172,24 @@ public class BadgeController {
             this.completedCount = completedCount;
         }
     }
-
+    @GetMapping("/badges/progress")
+    public ResponseEntity<?> getProgress(
+            @RequestHeader(value = "Authorization", required = false) String authHeader
+    ) {
+        try {
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authorization 헤더 필요");
+            }
+            String token = authHeader.substring(7);
+            if (!jwtUtils.validateToken(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 토큰");
+            }
+            String loginUserId = jwtUtils.getAuthentication(token).getName();
+            BadgeProgressDTO dto = badgeService.getProgress(loginUserId);
+            return ResponseEntity.ok(dto);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("progress조회 중 오류: " + e.getMessage());
+        }
+    }
 }
