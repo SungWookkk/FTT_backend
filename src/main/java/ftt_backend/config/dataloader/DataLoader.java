@@ -5,6 +5,7 @@ package ftt_backend.config.dataloader;
 import ftt_backend.model.Task;
 import ftt_backend.model.UserInfo;
 import ftt_backend.repository.TaskRepository;
+import ftt_backend.repository.UserRepository;
 import ftt_backend.service.TaskService;
 import ftt_backend.service.UserService;
 import org.springframework.batch.core.Job;
@@ -16,6 +17,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import java.time.LocalDate;
+import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Component
@@ -25,6 +27,9 @@ public class DataLoader implements CommandLineRunner {
 
     @Autowired
     private TaskRepository taskRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     private JobLauncher jobLauncher;
@@ -60,6 +65,28 @@ public class DataLoader implements CommandLineRunner {
             // 없으면 생성
             savedUser = userService.saveUser(defaultUser);
             System.out.println(">> 기본 사용자 생성: " + savedUser);
+        }
+
+        // demo(체험판) 계정 ===
+        Optional<UserInfo> optDemo = userRepository.findByUserId("demo");
+        UserInfo demoUser;
+        if (optDemo.isPresent()) {
+            demoUser = optDemo.get();
+            System.out.println(">> demo 사용자 이미 존재: " + demoUser.getUserId());
+        } else {
+            demoUser = new UserInfo();
+            demoUser.setUserId("demo");
+            demoUser.setUsername("demo 사용자");
+            demoUser.setEmail("demo@example.com");
+            demoUser.setBirthDate(generateRandomBirthDate());
+            demoUser.setPhoneNumber(null);
+            demoUser.setPassword("demo");
+            demoUser.setRole("USER");
+            demoUser.setSmsOptIn(false);
+            demoUser.setProvider("LOCAL");
+            demoUser.setProviderId("demo");
+            demoUser = userService.saveUser(demoUser);
+            System.out.println(">> demo 사용자 생성: " + demoUser.getUserId());
         }
 
         // 2) ‘내일’ 마감인 테스트 Task 하나 생성

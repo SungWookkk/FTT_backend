@@ -3,7 +3,9 @@
  */
 package ftt_backend.controller;
 
+import ftt_backend.config.JwtUtils;
 import ftt_backend.model.UserInfo;
+import ftt_backend.model.dto.AuthResponse;
 import ftt_backend.repository.UserRepository;
 import ftt_backend.service.UserService;
 import org.slf4j.Logger;
@@ -24,6 +26,9 @@ public class AuthController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private JwtUtils jwtUtils;
 
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
     // 회원가입
@@ -62,5 +67,21 @@ public class AuthController {
                 + logoutRequest.get("userName") + ", 사용자 ID = "
                 + logoutRequest.get("userId"));
         return ResponseEntity.ok("로그아웃 성공!");
+    }
+
+    /** demo/demo 계정으로 바로 로그인 */
+    @GetMapping("/demo")
+    public ResponseEntity<?> demoLogin() {
+        UserInfo demo = userRepository.findByUserId("demo")
+                .orElseThrow(() -> new RuntimeException("demo 계정이 없습니다"));
+        String token = jwtUtils.generateToken(demo.getUserId());
+        return ResponseEntity.ok(new AuthResponse(
+                token,
+                demo.getUsername(),
+                String.valueOf(demo.getId()),
+                demo.getRole(),
+                demo.getProfile_image(),
+                null
+        ));
     }
 }
